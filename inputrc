@@ -1,0 +1,4 @@
+# Show all autocomplete options and then cycle through
+"\C-i": menu-complete
+set completion-ignore-case on
+set show-all-if-ambiguous on

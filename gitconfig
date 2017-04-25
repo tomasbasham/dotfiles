@@ -1,0 +1,105 @@
+# vim: set ft=gitconfig:
+
+[alias]
+  a = add
+  br = branch
+  bs = bisect start
+  ci = commit
+  cl = clone
+  co = checkout
+  dump = cat-file -p
+  fame = shortlog -s -n --all --no-merges
+  force = push --force-with-lease
+  gover = log -1 --format="v0.0.0-%cd-%h" --date=format:"%Y%m%d%H%M%S" --abbrev=12
+  graph = log --graph --decorate --oneline --all
+  hist = log --pretty=format:'%C(magenta)%m %C(yellow)%h %C(red)%ai %C(blue)%an %C(cyan)<%ae> %C(reset)%s%C(green)%d' --abbrev-commit --graph --decorate --all
+  push = push -u origin HEAD
+  pushall = push --recurse-submodules=on-demand
+  squish = commit -a --amend -c HEAD
+  st = status
+  type = cat-file -t
+  week = log --all --pretty=format:'%h %cd %s (%an)' --since='7 days ago'
+  wip = commit -a --amend --no-edit
+
+  # Gerrit
+  change = codereview change
+  gofmt = codereview gofmt
+  mail = codereview mail
+  pending = codereview pending
+  submit = codereview submit
+  sync = codereview sync
+
+[branch]
+  autosetuprebase = always
+
+[clean]
+  requireForce = true
+
+[color]
+  ui = auto
+
+[color "branch"]
+  current = green bold
+  local = green
+  remote = yellow
+
+[color "diff"]
+  frag = magenta
+  meta = yellow
+  new = green
+  old = red
+
+[color "diff-highlight"]
+  oldNormal = red bold
+  oldHighlight = red bold 52
+  newNormal = green bold
+  newHighlight = green bold 22
+
+[color "status"]
+  added = green
+  changed = yellow
+  untracked = red
+
+[commit]
+  gpgsign = true
+  template = ~/.gitmessage
+  verbose = true
+
+[core]
+  editor = vim
+  excludesfile = ~/.gitignore_global
+
+[diff]
+  tool = vimdiff
+
+# Use `hexdump` to diff binary files
+[diff "bin"]
+  textconv = hexdump -v -C
+
+[filter "lfs"]
+  required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge --skip -- %f
+
+[help]
+  autocorrect = 10 # 1 seconds to change my mind
+
+[http]
+  cookiefile = /Users/tbm/.gitcookies
+
+# Use this for adding username, email and signing key
+[include]
+  path = ~/.gitconfig.after
+
+[pull]
+  rebase = true
+
+[push]
+  default = simple
+  followTags = true
+
+[rerere]
+  enabled = true
+
+[tag]
+  forceSignAnnotated = true

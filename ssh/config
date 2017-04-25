@@ -1,0 +1,11 @@
+Host *
+  UseKeychain yes
+  AddKeysToAgent yes
+  IdentityFile ~/.ssh/id_rsa
+  XAuthLocation /opt/X11/bin/xauth
+
+# Host example
+#   ForwardAgent yes
+#   ForwardX11 no
+#   ForwardX11Trusted yes
+#   RequestTTY force
