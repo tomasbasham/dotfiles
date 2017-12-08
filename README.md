@@ -30,3 +30,27 @@ From within the terminal application run:
 ```bash
 curl -s https://dotfiles.tomasbasham.dev | bash
 ```
+
+This downloads and immediately runs a short [bash
+script](https://raw.githubusercontent.com/tomasbasham/dotfiles/master/scripts/setup)
+that will fetch and extract the latest dotfiles archive from github into a
+temporary location and installs everything into `~/dotfiles`.
+
+### Additional Components
+
+In addition some common development tools can be installed through the
+installation script. These must be given as a comma separated list.
+
+```bash
+curl -s https://dotfiles.tomasbasham.dev | bash -s -- --additional-components=COMPONENTS
+```
+Available components are:
+
+- aws
+- docker (with docker-compose)
+- gcloud
+- golang
+- helm
+- kustomize
+- sops
+- terraform

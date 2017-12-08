@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+
+set -e
+
+__DOTFILES_DIR="dotfiles"
+__DOTFILES_TTY=/dev/tty
+
+COMMAND=${0##*/}
+DIRNAME=$(dirname "$0")
+
+# Include utility functions
+source "${DIRNAME}/utils.sh"
+
+usage() {
+  echo "
+$COMMAND [ --disable-prompts ] [ --install-dir=DIRECTORY ]
+  [ --additional-components=COMPONENTS ]
+
+Installs dotfiles in a directory of your choosing, and then installs any
+additional components by running the installation scripts included in the
+downloaded archive.
+
+--disable-prompts
+  Disables prompts. Prompts are always disabled when there is no controlling
+  tty. Alternatively export DOTFILES_DISABLE_PROMPTS=1 before running the
+  script.
+
+--install-dir=DIRECTORY
+  Sets the installation root directory to DIRECTORY. The dotfiles will be
+  installed in DIRECTORY/$__DOTFILES_DIR. The default is \$HOME. Alternatively,
+  export DOTFILES_INSTALL_DIR=DIRECTORY before running the script or export
+  PREFIX=DIRECTORY for backwards compatibility with older versions of this
+  script.
+
+--additional-components=COMPONENTS
+  Sets a list of components to install. This is a comma delimited list of
+  components to independently install.
+" >&2
+  exit 2
+}
+
+# Accept PREFIX as a DOTFILES_INSTALL_DIR default for backwards compatibility.
+if [[ -z "$DOTFILES_INSTALL_DIR" ]]; then
+  DOTFILES_INSTALL_DIR=$PREFIX
+fi
+
+while true; do
+  case $# in
+    0)  break ;;
+  esac
+  case $1 in
+    --disable-prompts)
+      DOTFILES_DISABLE_PROMPTS=1
+      export DOTFILES_DISABLE_PROMPTS
+      ;;
+    --install-dir|--prefix)
+      shift
+      case $# in
+        0)
+          echo "$COMMAND: --install-dir: DIRECTORY argument expected." >&2
+          exit 1
+          ;;
+      esac
+      DOTFILES_INSTALL_DIR=$1
+      ;;
+    --install-dir=*|--prefix=*)
+      DOTFILES_INSTALL_DIR=${1#*=}
+      ;;
+    --additional-components)
+      shift
+      case $# in
+        0)
+          echo "$COMMAND: --additional-components: COMPONENTS argument expected." >&2
+          exit 1
+          ;;
+      esac
+      DOTFILES_ADDITIONAL_COMPONENTS=$1
+      ;;
+		--additional-components=*)
+      DOTFILES_ADDITIONAL_COMPONENTS=${1#*=}
+      ;;
+    *)
+      usage
+      ;;
+  esac
+  shift
+done
+
+install() {
+  local install_dir=${DOTFILES_INSTALL_DIR:-$HOME}/${__DOTFILES_DIR}
+
+  # Symlink dotfiles.
+  echo "installing dotfiles in ${install_dir}"
+
+  # Install additional components.
+  install_components
+}
+
+install_components() {
+  local components=${DOTFILES_ADDITIONAL_COMPONENTS}
+
+  # Install additional compnents.
+  IFS=","
+  for component in $components; do
+    case $component in
+      aws)
+        echo "./scripts/aws"
+        ;;
+      docker)
+        echo "./scripts/docker"
+        ;;
+      gcloud)
+        echo "./scripts/gcloud-sdk"
+        ;;
+      golang)
+        echo "./scripts/golang"
+        ;;
+      helm)
+        echo "./scripts/helm"
+        ;;
+      kustomize)
+        echo "./scripts/kustomize"
+        ;;
+      sops)
+        echo "./scripts/sops"
+        ;;
+      terraform)
+        echo "./scripts/terraform"
+        ;;
+    esac
+  done
+}
+
+PS4=
+if [[ -z "DOTFILES_DISABLE_PROMPTS" ]]; then
+  if { command true < $__DOTFILES_TTY; } > /dev/null 2>&1; then
+    # Grab prompt input from the tty.
+    install < $__DOTFILES_TTY
+  else
+    # No tty so don't prompt.
+    DOTFILES_DISABLE_PROMPTS=1 install
+  fi
+else
+  install
+fi
