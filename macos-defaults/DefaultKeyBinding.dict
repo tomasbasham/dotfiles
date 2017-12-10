@@ -1,0 +1,4 @@
+{
+  /* Map # to § key*/
+  "§" = ("insertText:", "#");
+}
