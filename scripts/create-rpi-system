@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+set -e
+
+__SYSTEM_DIR="arm-rootfs"
+__SYSTEM_URL="https://github.com/multiarch/qemu-user-static/releases/download/v3.1.0-3/x86_64_qemu-arm-static.tar.gz"
+__SYSTEM_TTY=/dev/tty
+
+COMMAND=${0##*/}
+DIRNAME=$(dirname "$0")
+
+# Include utility functions
+source "${DIRNAME}/utils.sh"
+
+usage() {
+  echo "
+$COMMAND [ --dist=DIST ] [ --rootfs-dir=DIRECTORY ]
+
+Create an ARM compatible Debain base system in a directory of your choosing for
+use when cross compiling binaries for the raspberry pi.
+
+--dist
+  Sets the release Debian distribution to DIST. Default jessie.
+
+--rootfs-dir
+  Sets the installation root directory to DIRECTORY. The system  will be
+  installed in DIRECTORY/$__SYSTEM_DIR. The default is \$HOME. Alternatively,
+  export SYSTEM_INSTALL_DIR=DIRECTORY before running the script or export
+  PREFIX=DIRECTORY for backwards compatibility with older versions of this
+  script.
+" >&2
+  exit 2
+}
+
+# Accept PREFIX as a SYSTEM_INSTALL_DIR default for backwards compatibility.
+if [[ -z "$SYSTEM_INSTALL_DIR" ]]; then
+  SYSTEM_INSTALL_DIR=$PREFIX
+fi
+
+while true; do
+  case $# in
+    0)  break;;
+  esac
+  case $1 in
+    --dist)
+      shift
+      case $# in
+        0)
+          echo "$COMMAND: --dist: DIST argument expected." >&2
+          exit 1
+          ;;
+      esac
+      SYSTEM_DIST=$1
+      ;;
+    --dist=*)
+      SYSTEM_DIST=${1#*=}
+      ;;
+    --rootfs-dir|--prefix)
+      shift
+      case $# in
+        0)
+          echo "$COMMAND: --rootfs-dir: DIRECTORY argument expected." >&2
+          exit 1
+          ;;
+      esac
+      SYSTEM_INSTALL_DIR=$1
+      ;;
+    --rootfs-dir=*|--prefix=*)
+      SYSTEM_INSTALL_DIR=${1#*=}
+      ;;
+    *)
+      usage
+      ;;
+  esac
+  shift
+done
+
+install() {
+  local dist="${SYSTEM_DIST:-jessie}"
+  local install_dir="${SYSTEM_INSTALL_DIR:-$HOME}/${__SYSTEM_DIR}"
+
+  echo $dist
+  echo $install_dir
+
+  echo "creating ARM Hard Float Point compatible Debian base system in ${install_dir}"
+  debootstrap \
+    --arch armhf \
+    --foreign \
+    --include=g++,libasound2-dev,libpulse-dev,libudev-dev,libexpat1-dev,libnss3-dev,libgtk2.0-dev \
+    ${dist} \
+    ${install_dir}
+
+  download ${__SYSTEM_URL} /dev/stdout | tar -C "${install_dir}/usr/bin" -zxf -
+
+  echo "configuring the base system"
+  chroot ${install_dir} /debootstrap/debootstrap --second-stage
+
+  # Fix symbolic link references pointing to /lib
+  find ${install_dir}/usr/lib/arm-linux-gnueabihf -lname "/*" -printf "%p %l\n" | while read link target; do
+    ln -sfn "../../..${target}" "${link}"
+  done
+
+  find ${install_dir}/usr/lib/arm-linux-gnueabihf/pkgconfig -printf "%f\n" | while read target; do
+    ln -sfn "../../lib/arm-linux-gnueabihf/pkgconfig/${target}" "${install_dir}/usr/share/pkgconfig/${target}"
+  done
+}
+
+install
