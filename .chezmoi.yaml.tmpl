@@ -14,6 +14,7 @@
 
 {{- $email      := get . "email" -}}
 {{- $name       := get . "name" -}}
+{{- $username   := get . "username" -}}
 {{- $encryptkey := get . "encryptkey" -}}
 {{- $signingkey := get . "signingkey" -}}
 
@@ -22,6 +23,9 @@
 {{- end -}}
 {{- if not $name -}}
 {{-   $name = promptString "Git username for the author/committer" -}}
+{{- end -}}
+{{- if not $username -}}
+{{-   $username = promptString "GitHub username" -}}
 {{- end -}}
 {{- if not $encryptkey -}}
 {{-   $encryptkey = promptString "GPG encryption key for secrets" -}}
@@ -46,4 +50,5 @@ gpg:
 data:
   email: {{ $email | quote }}
   name: {{ $name | quote }}
+  username: {{ $username | quote }}
   signingkey: {{ $signingkey | quote }}

@@ -1,0 +1,14 @@
+# -*-mode:ssh-config-*- vim:ft=sshconfig
+
+# ~/.ssh/authorized_keys
+# =============================================================================
+# OpenSSH authorized keys configuration. This file lists SSH keys that can be
+# used for logging into the user account for which the file is configured.
+#
+# See https://www.ssh.com/academy/ssh/authorized-keys-file
+
+{{- /* This file supports Go's text/template language. */}}
+
+{{ range gitHubKeys .username -}}
+{{   .Key }}
+{{ end -}}
