@@ -1,0 +1,28 @@
+{{- /*
+# ~/.bash_profile
+# =============================================================================
+# Executed by bash for login shells and holds bash specific configurations.
+#
+# This file will be read by bash instead of any existing `~/.profile`.
+#
+# For Login shells (subject to the -noprofile option):
+#
+# On logging in:
+#   If `/etc/profile' exists, then source it.
+#
+#   If `~/.bash_profile' exists, then source it,
+#     else if `~/.bash_login' exists, then source it,
+#       else if `~/.profile' exists, then source it.
+#
+# On logging out:
+#   If `~/.bash_logout' exists, source it.
+#
+# For non-login interactive shells bash will not automatically source
+# ~/.bashrc. As such this file is a symbolic link to the ~/.bashrc file. If it
+# exists ~/.bashrc sets further bash specific options for interactive shell
+# sessions.
+#
+# See https://www.gnu.org/software/bash/manual/html_node/index.html
+*/ -}}
+
+{{ .chezmoi.homeDir }}/.bashrc

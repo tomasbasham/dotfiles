@@ -1,0 +1,12 @@
+# -*-model:conf-yaml-*- vim:ft=yaml
+
+# ~/.local/share/chezmoi/.chezmoiexternal.yaml
+# =============================================================================
+# Used to import external files to the distination directory.
+#
+# See https://www.chezmoi.io/user-guide/include-files-from-elsewhere/
+---
+".config/bash_completion":
+  type: "file"
+  url: "https://raw.githubusercontent.com/scop/bash-completion/master/bash_completion"
+  refreshPeriod: "168h"

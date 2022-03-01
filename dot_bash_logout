@@ -1,0 +1,11 @@
+# -*-mode:bash-*- vim:ft=bash
+# shellcheck shell=bash
+
+# ~/.bash_logout
+# =============================================================================
+# Executed by bash when login shell exits.
+
+# Clear the screen when leaving the console to increase privacy.
+if [[ "$SHLVL" -eq 1 ]]; then
+  cls
+fi

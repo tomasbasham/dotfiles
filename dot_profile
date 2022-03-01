@@ -1,0 +1,165 @@
+# -*-mode:sh-*- vim:ft=sh
+# shellcheck shell=sh disable=SC1091
+
+# ~/.profile
+# =============================================================================
+# Shell profile configuration sourced by `~/.bashrc`.
+
+# ===========
+# === Bin ===
+# ===========
+
+# Set PATH so it includes the user's private bin directories.
+if [ -d "${HOME}/bin" ]; then
+  PATH="${HOME}/bin:${PATH}"
+fi
+
+if [ -d "${HOME}/.local/bin" ]; then
+  PATH="${HOME}/.local/bin:${PATH}"
+fi
+
+# ===============
+# === Colours ===
+# ===============
+
+# Tell my terminal to be colourful
+export CLICOLOR=1
+export LSCOLORS=ExFxBxDxCxegedabagacad
+
+# Tell grep to highlight matches
+export GREP_COLORS='ms=1;33'
+
+# ==============
+# === Editor ===
+# ==============
+
+# Set the default editor to neo-vim
+if type 'nvim' > /dev/null 2>&1; then
+  export EDITOR=nvim
+else
+  export EDITOR=vim
+fi
+
+# ===========
+# === GPG ===
+# ===========
+
+# Tell gpg to use the terminal to prompt for password.
+GPG_TTY="$(tty)"
+export GPG_TTY
+
+# ==========
+# === Go ===
+# ==========
+
+export GOPATH="${HOME}/go"
+
+if [ -d "${HOME}/.local/go" ]; then
+  PATH="${HOME}/.local/go/bin:${PATH}:${GOPATH}/bin"
+fi
+
+# ===========
+# === GPG ===
+# ===========
+
+# This create-socketdir command is only required if a non default home
+# directory is used and the /run based sockets shall be used. For the default
+# home directory GnUPG creates a directory on the fly.
+if [ ! -d "${HOME}/.gnupg" ]; then
+  if [ -d /run/user ] || [ -d /var/run/user ]; then
+    gpgconf --create-socketdir
+  fi
+fi
+
+# =============
+# === mcfly ===
+# =============
+
+export mcfly_light=true
+export mcfly_key_scheme=vim
+
+# ==============
+# === nodenv ===
+# ==============
+
+export NODENV_ROOT="${HOME}/.nodenv"
+
+if [ -d "${HOME}/.nodenv" ]; then
+  PATH="${NODENV_ROOT}/bin:${PATH}"
+fi
+
+# =============
+# === pyenv ===
+# =============
+
+export PYTHONSTARTUP="${HOME}/.pythonrc:${PYTHONSTARTUP}"
+export PYENV_ROOT="${HOME}/.pyenv"
+
+if [ -d "${HOME}/.pyenv" ]; then
+  PATH="${PYENV_ROOT}/bin:${PATH}"
+fi
+
+# =============
+# === rbenv ===
+# =============
+
+export RBENV_ROOT="${HOME}/.rbenv"
+
+if [ -d "${HOME}/.rbenv" ]; then
+  PATH="${RBENV_ROOT}/bin:${PATH}"
+fi
+
+# libssl on macOS is a pain in the ass. When compiling Ruby use this directory
+# to locate the SSL library files if present on the system.
+if [ -d "/usr/local/ssl" ]; then
+  export RUBY_CONFIGURE_OPTS=-with-openssl-dir=/usr/local/ssl
+fi
+
+# ============
+# === rust ===
+# ============
+
+export CARGO_ROOT="${HOME}/.cargo"
+
+if [ -d "${HOME}/.cargo/bin" ]; then
+  PATH="${CARGO_ROOT}/bin:${PATH}"
+fi
+
+# ============
+# === tmux ===
+# ============
+
+# Ensures the correct TERM value inside tmux.
+# Requires to also set the following in tmux.conf:
+#
+#   # ~/.tmux.conf
+#   set -g default-terminal "screen-256color"
+#
+if [ -n "${TMUX}" ]; then
+  export TERM=screen-256color
+else
+  export TERM=xterm-256color
+fi
+
+# ===========
+# === X11 ===
+# ===========
+
+# If using X11 forwarding this acts as the DISPLAY to use
+if type ifconfig > /dev/null 2>&1; then
+  XHOST="$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')"
+  export XHOST
+  export XDISPLAY="${XHOST}:0"
+fi
+
+# When using tmux, a nested interactive subshell is spawned. That means that
+# .bashrc gets sourced again, and the same paths get added to the already
+# prepared PATH. This is super annoying. The below removes duplicates from the
+# PATH.
+PATH=$(printf "%s" "${PATH}" | awk -v RS=':' '!a[$1]++ { if (NR > 1) printf RS; printf $1 }')
+export PATH
+
+# Load additional configurations.
+if [ -f "${HOME}/.profile.after" ]; then
+  . "${HOME}/.profile.after"
+fi
