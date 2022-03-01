@@ -1,0 +1,178 @@
+# -*-mode:bash-*- vim:ft=bash
+
+# ~/.zshrc
+# =============================================================================
+# Executed by Z shell for interactive shells and holds Z shell specific
+# configurations.
+#
+# This file will be read by Z shell instead of any existing `~/.profile`. For
+# complete compatibility this file also includes the `~/.profile` script to set
+# non Z shell specfic variables.
+#
+# See https://zsh.sourceforge.net/
+
+# Load configurations common across shell environments.
+for file in "${HOME}/.profile" "${HOME}/.aliases" "${HOME}/.functions"; do
+  if [[ -f "${file}" ]]; then
+    source "${file}"
+  fi
+done
+
+# ================
+# === Commands ===
+# ================
+
+# Allow long commands to be editied with ctrl+x+e
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^xe' edit-command-line
+bindkey '^x^e' edit-command-line
+
+# this would normally be done by oh-my-zsh but even if was installed, some apps
+# still need it again
+autoload -Uz compinit && compinit -i
+
+# highlight current completion option
+zstyle ':completion:*' menu select
+
+# use the same colors for completion as ls
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+
+# Still use emacs-style zsh bindings.
+# This is preventing McFly from working inside of tmux
+# bindkey -e
+
+# emacs-style zsh bindings
+bindkey "^A"    beginning-of-line
+bindkey "^E"    end-of-line
+
+# other bindings
+bindkey "^[[1~" beginning-of-line
+bindkey "^[[4~" end-of-line
+bindkey "^[[5~" beginning-of-history
+bindkey "^[[6~" end-of-history
+bindkey "^[[3~" delete-char
+bindkey "e[2~"  quoted-insert
+bindkey "e[5C"  forward-word
+bindkey "eOc"   emacs-forward-word
+bindkey "e[5D"  backward-word
+bindkey "eOd"   emacs-backward-word
+bindkey "ee[C"  forward-word
+bindkey "ee[D"  backward-word
+bindkey "^H"    backward-delete-word
+
+# for rxvt
+bindkey "e[8~"  end-of-line
+bindkey "e[7~"  beginning-of-line
+
+# for non RH/Debian xterm, can't hurt for RH/DEbian xterm
+bindkey "eOH"   beginning-of-line
+bindkey "eOF"   end-of-line
+
+# for freebsd console
+bindkey "e[H"   beginning-of-line
+bindkey "e[F"   end-of-line
+
+# completion in the middle of a line
+bindkey '^i'    expand-or-complete-prefix
+
+# =================
+# === Directory ===
+# =================
+
+setopt auto_pushd
+setopt pushd_ignore_dups
+setopt pushdminus
+setopt auto_cd
+
+# ====================
+# === Flow control ===
+# ====================
+
+stty -ixon
+unsetopt flow_control # Allow commands to be parked with ctrl+q
+
+# ========================
+# === Google Cloud SDK ===
+# ========================
+
+if [ -f "$HOME/.local/google-cloud-sdk/path.zsh.inc" ]; then
+  source "$HOME/.local/google-cloud-sdk/path.zsh.inc"
+fi
+
+# ===========
+# === GPG ===
+# ===========
+
+# This create-socketdir command is only required if a non default home
+# directory is used and the /run based sockets shall be used. For the default
+# home directory GnUPG creates a directory on the fly.
+if [[ ! -d ${HOME}/.gnupg && ( -d /run/user || -d /var/run/user ) ]]; then
+  gpgconf --create-socketdir
+fi
+
+# ===============
+# === History ===
+# ===============
+
+[ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
+[ "$HISTSIZE" -lt 50000 ] && HISTSIZE=50000
+[ "$SAVEHIST" -lt 10000 ] && SAVEHIST=10000
+
+setopt extended_history       # Record timestamp of command in HISTFILE
+setopt hist_expire_dups_first # Delete duplicates first when HISTFILE size exceeds HISTSIZE
+setopt hist_ignore_dups       # Ignore duplicated commands history list
+setopt hist_ignore_space      # Ignore commands that start with space
+setopt hist_find_no_dups      # Ignore duplicated commands when searching
+setopt hist_reduce_blanks     # Remove whitespace from commands before adding to history
+setopt hist_verify            # Show command with history expansion to user before running it
+# setopt share_history          # Share command history data
+
+# Cycle through history with the up and down arrow keys.
+autoload -U history-search-end
+zle -N history-beginning-search-backward-end history-search-end
+zle -N history-beginning-search-forward-end history-search-end
+bindkey "^[[A" history-beginning-search-backward-end
+bindkey "^[[B" history-beginning-search-forward-end
+
+# =============
+# === mcfly ===
+# =============
+
+if [[ -n "$(command -v mcfly)" ]]; then
+  eval "$(mcfly init zsh)"
+fi
+
+# ==============
+# === Prompt ===
+# ==============
+
+git_prompt() {
+  ref=$(git symbolic-ref HEAD | cut -d'/' -f3)
+  echo $ref
+}
+
+setopt prompt_subst
+autoload -Uz vcs_info
+
+precmd() {
+  vcs_info
+}
+
+# Format the vcs_info_msg_0_ variable
+zstyle ':vcs_info:*' enable git cvs svn
+zstyle ':vcs_info:git:*' formats ' (%b)'
+
+vcs_info
+PROMPT='%B%n@%m%b:%~${vcs_info_msg_0_}$ '
+
+# ===========
+# === SSH ===
+# ===========
+
+update_auth_sock
+
+# Load additional configurations.
+if [ -f "${HOME}/.zshrc.after" ]; then
+  source "${HOME}/.zshrc.after"
+fi

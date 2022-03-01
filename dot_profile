@@ -3,7 +3,7 @@
 
 # ~/.profile
 # =============================================================================
-# Shell profile configuration sourced by `~/.bashrc`.
+# Shell profile configuration sourced by `~/.bashrc` and `~/.zshrc`.
 
 # ===========
 # === Bin ===

@@ -3,7 +3,7 @@
 
 # ~/.functions
 # =============================================================================
-# Shell functions sourced by `~/.bashrc`.
+# Shell functions sourced by `~/.bashrc` and `~/.zshrc`.
 
 # =========================
 # === General functions ===

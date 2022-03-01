@@ -3,7 +3,7 @@
 
 # ~/.aliases
 # =============================================================================
-# Shell aliases sourced by `~/.bashrc`.
+# Shell aliases sourced by `~/.bashrc` and `~/.zshrc`.
 #
 # OSTYPE values used:
 #   - darwin: macOS
