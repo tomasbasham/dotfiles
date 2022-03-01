@@ -25,6 +25,18 @@ a single command:
 sh -c "$(curl -fsLS chezmoi.io/get)" -- init --apply tomasbasham
 ```
 
+### Additional customisation
+
+A few of the configurations in this repository allow for extension by including
+a file with a name following `*.after` in the same directory as the respective
+configuration file. For example to extend the content of `.profile` you may
+create a `.profile.after` with your customisations. A list of extendable
+configuration files is as follows:
+
+| File         | Extension          | Purpose                                  |
+|--------------|--------------------|------------------------------------------|
+| `.gitconfig` | `.gitconfig.after` | Git configurations                       |
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE.md).

@@ -1,0 +1,37 @@
+# -*-mode:gitiattributes-*- vim:ft=dosini
+
+# ~/.gitattributes
+# =============================================================================
+# Used by Git to determine the file attributes per path gloablly.
+#
+# This list defines global file attributes to all local repositories.
+#
+# See https://git-scm.com/docs/gitattributes
+
+*.c       diff=cpp
+*.h       diff=cpp
+*.c++     diff=cpp
+*.h++     diff=cpp
+*.cpp     diff=cpp
+*.hpp     diff=cpp
+*.cc      diff=cpp
+*.hh      diff=cpp
+*.m       diff=objc
+*.mm      diff=objc
+*.cs      diff=csharp
+*.css     diff=css
+*.html    diff=html
+*.xhtml   diff=html
+*.ex      diff=elixir
+*.exs     diff=elixir
+*.go      diff=golang
+*.php     diff=php
+*.pl      diff=perl
+*.py      diff=python
+*.md      diff=markdown
+*.rb      diff=ruby
+*.rake    diff=ruby
+*.rs      diff=rust
+*.lisp    diff=lisp
+*.el      diff=lisp
+*_spec.rb diff=rspec

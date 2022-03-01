@@ -1,0 +1,294 @@
+# -*-mode:gitconfig-*- vim:ft=gitconfig
+
+# ~/.gitconfig
+# =============================================================================
+# User-specific Git configuration file.
+#
+# See https://git-scm.com/docs/git-config
+#
+# Sources:
+#   https://delicious-insights.com/en/posts/mastering-git-submodules/
+#   https://github.com/haacked/dotfiles
+#   https://github.com/holman/dotfiles
+#   https://github.com/jayharris/dotfiles-windows
+#   https://github.com/mathiasbynens/dotfiles
+#   https://git-scm.com/docs/git-config/
+
+{{- /* This file supports Go's text/template language. */}}
+
+[alias]
+  # Adds files to the stage.
+  a = add
+
+  # Amends the currently staged files to the latest commit.
+  amend = commit --amend --no-edit
+
+  # Creates a new branch.
+  br = branch
+
+  # Begins bisecting.
+  bs = bisect start
+
+  # Lists the files with the most churn.
+  churn = !git --no-pager log --name-only --oneline | grep -v ' ' | sort | uniq -c | sort -nr | head
+
+  # Commit changes to the local repository.
+  ci = commit
+
+  # Clones a repository including all submodules.
+  cl = clone --recursive
+
+  # Switches to an existing branch.
+  co = checkout
+
+  # Shows list of files in a conflict state.
+  conflicts = diff --name-only --diff-filter=U
+
+  # Picks arbitrary commits by reference and appends them to the HEAD.
+  cp = cherry-pick
+
+  # Discards changes to a file.
+  discard = checkout --
+
+  # Removes branches that have been merged with master (delete merged).
+  dm = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
+
+  # Pretty-prints object's content.
+  dump = cat-file -p
+
+  # Lists contributors with number of commits.
+  fame = shortlog -s -n --all --no-merges
+
+  # Forces push without overwriting the work of others.
+  force = push --force-with-lease
+
+  # Prints a golang compatible package version for the latest commit. Use this
+  # to import packages from the main branch.
+  gover = log -1 --format="v0.0.0-%cd-%h" --date=format:"%Y%m%d%H%M%S" --abbrev=12
+
+  # Shows short SHA, description and history graph of commits.
+  graph = log --graph --decorate --oneline --all
+
+  # Shows short SHA, date, description, history graph, and author of commits.
+  hist = log --pretty=format:'%C(magenta)%m %C(yellow)%h %C(red)%ai %C(blue)%an %C(cyan)<%ae> %C(reset)%s%C(green)%d' --abbrev-commit --graph --decorate --all
+
+  # Shows short SHA, description, and history graph of commits.
+  l = log --pretty=oneline --graph --abbrev-commit
+
+  # Shows short SHA, description, history graph, time, and author of commits.
+  ll = log --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --graph --abbrev-commit
+
+  # Shows short SHA, date, description, history graph, and author of commits.
+  lo = log --pretty=format:\"%Cred%h%Creset %Cgreen%ad%Creset | %s%C(auto)%d%Creset %C(bold blue)<%an>%Creset\" --graph --date=short
+
+  # Writes dangling objects to lost and found.
+  lost = fsck --lost-found
+
+  # Pulls in remote changes for the current repository and all its submodules.
+  pull = pull --recurse-submodules
+
+  # Push changes and track the branch.
+  push = push -u origin HEAD
+
+  # Pushes to remote, including all its submodules recursively.
+  pushall = push --recurse-submodules=on-demand
+
+  # List the age of the most recent commits for each branch.
+  refs = for-each-ref --sort='authordate:iso8601' --format=' %(color:green)%(authordate:relative)%09%(color:black)%(refname:short)' refs/heads
+
+  # Shows the current working tree status
+  st = status
+
+  # Shows verbose output about tags.
+  tags = tag -l
+
+  # Shows object type.
+  type = cat-file -t
+
+  # Commits as work in progress.
+  wip = commit -am "wip"
+
+  # Gerrit
+
+  # Checkout the commit corresponding to CL number and patch.
+  change = codereview change
+
+  # Runs gofmt on all tracked files in the current working tree.
+  gofmt = codereview gofmt
+
+  # Uploads change commit to the code review server and sends mail requesting
+  # a code review.
+  mail = codereview mail
+
+  # Shows the status of all pending changes and staged, unstaged, and untracked
+  # files in the local repository.
+  pending = codereview pending
+
+  # Pushes the pending change to the Gerrit server and tells Gerrit to submit
+  # it to the master branch.
+  submit = codereview submit
+
+  # Fetches changes from the remote repository and merges them into the current
+  # branch, rebasing the change commit on top of them.
+  sync = codereview sync
+
+[apply]
+  # Detect whitespace errors when applying a patch.
+  whitespace = fix
+
+[branch]
+  autosetuprebase = always
+
+[clean]
+  requireForce = true
+
+[color]
+  # Use colors in Git commands that are capable of colored output when
+  # outputting to the terminal. (This is the default setting in Git ≥ 1.8.4.)
+  ui = auto
+
+[color "branch"]
+  current = green bold
+  local = green
+  remote = yellow
+
+[color "diff"]
+  frag = magenta
+  meta = yellow
+  new = green
+  old = red
+
+[color "diff-highlight"]
+  oldNormal = red bold
+  oldHighlight = red bold 52
+  newNormal = green bold
+  newHighlight = green bold 22
+
+[color "status"]
+  added = green
+  changed = yellow
+  untracked = red
+
+[commit]
+{{- if .signingkey }}
+  # Force all commits to be signed using the users GPG key.
+  gpgsign = true
+{{ end }}
+  # Specify template file for new commit messages.
+  template = ~/.gitmessage
+
+  # Show changes at the bottom of the commit message.
+  verbose = true
+
+[core]
+  # Store global exclusions into a custom file.
+  excludesfile = ~/.gitignore_global
+
+  # Store global attributes into a custom file.
+  attributesfile = ~/.gitattributes
+
+  # Use the delta diff tool.
+  pager = delta
+
+  # Speed up commands involving untracked files such as `git status`.
+  # See https://git-scm.com/docs/git-update-index#_untracked_cache
+  untrackedCache = true
+
+[delta]
+  light = true
+  line-numbers = true
+  navigate = true
+  paging = always
+  features = tweaks
+
+# Adjustments to the default style, which puts too much emphasis on the hunks.
+[delta "tweaks"]
+  commit-decoration-style = box ul bold brightblack
+  file-decoration-style = box black
+  file-style = brightblack bold
+  hunk-header-line-number-style = blue bold
+  hunk-header-decoration-style =
+  hunk-header-file-style = brightblack
+  hunk-header-style = syntax brightwhite bold line-number
+
+[diff]
+  tool = vimdiff
+
+[diff "bin"]
+  # Use `hexdump` to diff binary files.
+  textconv = hexdump -v -C
+
+[diff "rspec"]
+  xfuncname = "^[ \t]*((RSpec|describe|context|it|before|after|around|feature|scenario)[ \t].*)$"
+
+[fetch]
+  # Remove any remote-tracking references that no longer exist on the remote.
+  prune = true
+
+[filter "lfs"]
+  # Specify the command to convert a worktree file's content to a blob upon checkin.
+  clean = git-lfs clean -- %f
+
+  # Convert between Large File Storage pointer and actual content.
+  process = git-lfs filter-process
+
+  # Specify the command to convert a blob object's content to a worktree file upon checkout.
+  smudge = git-lfs smudge --skip -- %f
+
+  # Turn a content that by itself is unusable into a usable content.
+  required = true
+
+[help]
+  # Correct and execute mistyped commands after 1 second.
+  autocorrect = 10
+
+[http]
+  cookiefile = {{ .chezmoi.homeDir }}/.gitcookies
+
+[include]
+  # Include additional configuration.
+  path = ~/.gitconfig.after
+
+[init]
+  defaultbranch = master
+
+[interactive]
+  diffFilter = delta --color-only
+
+[pull]
+  rebase = true
+
+[push]
+  # Push only the current branch if its named upstream is identical
+  default = simple
+
+  # Push annotated tags when pushing branches.
+  followTags = true
+
+[rebase]
+  # Create a temporary stash entry before the operation begins.
+  autostash = true
+
+[rerere]
+  enabled = true
+
+[status]
+  # Enable submodule summary of commits.
+  submoduleSummary = true
+{{- if .signingkey }}
+
+[tag]
+  forceSignAnnotated = true
+{{- end }}
+
+[user]
+  # Specify the email address of the author/committer.
+  email = {{ .email }}
+
+  # Specify the username of the author/committer.
+  name = {{ .name }}
+{{- if .signingkey }}
+
+  # Specify the GPG signing key of the author/comitter.
+  signingkey = {{ .signingkey }}
+{{- end }}
