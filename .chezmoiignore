@@ -9,6 +9,7 @@
 # See https://www.chezmoi.io/docs/reference/#chezmoiignore
 
 *.gz
+*.terminfo
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 LICENSE.md

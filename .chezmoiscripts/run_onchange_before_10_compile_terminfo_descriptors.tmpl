@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# -*-mode:sh-*- vim:ft=sh
+
+# compile_terminfo_descriptors
+# =============================================================================
+# Compile tmux specific terminfo profiles with "tic" to support italics inside
+# tmux.
+#
+# Some system might already have them, but in April 2021 most still don't
+# provide them.
+
+# The profiles will be compiled to ~/.terminfo.
+tic "{{ .chezmoi.sourceDir }}/tmux.terminfo"
+tic "{{ .chezmoi.sourceDir }}/tmux-256color.terminfo"
