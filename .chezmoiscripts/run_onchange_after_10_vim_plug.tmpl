@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# -*-mode:sh-*- vim:ft=sh
+
+# vim_plug
+# =============================================================================
+# Install vim plugins and quit immediately.
+
+# dot_vimrc hash: {{ include "dot_vimrc" | sha256sum }}
+vim +PlugInstall +qall

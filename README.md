@@ -38,6 +38,7 @@ configuration files is as follows:
 | `.bashrc`    | `.bashrc.after`    | Runs on interactive shell sessions       |
 | `.gitconfig` | `.gitconfig.after` | Git configurations                       |
 | `.profile`   | `.profile.after`   | Non shell specific environment variables |
+| `.vimrc`     | `.vimrc.after`     | Vim configurations                       |
 | `.zshrc`     | `.zshrc.after`     | Runs on interactive shell sessions       |
 
 ## License
