@@ -1,0 +1,32 @@
+# -*-model:conf-yaml-*- vim:ft=yaml
+
+# ~/.local/share/chezmoi/.chezmoi.yaml
+# =============================================================================
+# Used to customize configuration when doing a `chezmoi init`.
+#
+# This template file will trigger prompts to fill-in machine-specific
+# templateable values. The resulting file is then created at
+# `~/.config/chezmoi/chezmoi.yaml`
+#
+# See https://www.chezmoi.io/user-guide/setup/
+
+{{- /* This file supports Go's text/template language. */}}
+
+{{- $encryptkey := get . "encryptkey" -}}
+
+{{- if not $encryptkey -}}
+{{-   $encryptkey = promptString "GPG encryption key for secrets" -}}
+{{- end }}
+---
+sourceDir: {{ .chezmoi.sourceDir | quote }}
+
+diff:
+  exclude:
+  - scripts
+  format: git
+
+encryption: gpg
+gpg:
+  recipient: {{ $encryptkey | quote }}
+  args:
+  - --quiet
