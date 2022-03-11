@@ -2,6 +2,8 @@ Host *
   UseKeychain yes
   AddKeysToAgent yes
   IdentityFile ~/.ssh/id_rsa
+  ServerAliveInterval 60
+  ServerAliveCountMax 10
   XAuthLocation /opt/X11/bin/xauth
 
 # Host example
@@ -9,3 +11,5 @@ Host *
 #   ForwardX11 no
 #   ForwardX11Trusted yes
 #   RequestTTY force
+
+Include config.d/*

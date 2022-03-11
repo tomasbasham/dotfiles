@@ -1,0 +1,11 @@
+# vim: set ft=sh:
+
+# Convert a gif to mp4
+gif2mp4() {
+  ffmpeg -i $1 -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" $2
+}
+
+# Convert a vid to webm
+vid2webm() {
+  ffmpeg -i $1 -vcodec libvpx -acodec libvorbis -isync -copyts -aq 80 -threads 3 -qmax 30 -y $2 $1.webm
+}

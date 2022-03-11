@@ -15,6 +15,7 @@
   hist = log --pretty=format:'%C(magenta)%m %C(yellow)%h %C(red)%ai %C(blue)%an %C(cyan)<%ae> %C(reset)%s%C(green)%d' --abbrev-commit --graph --decorate --all
   push = push -u origin HEAD
   pushall = push --recurse-submodules=on-demand
+  refs = for-each-ref --sort='authordate:iso8601' --format=' %(color:green)%(authordate:relative)%09%(color:black)%(refname:short)' refs/heads
   squish = commit -a --amend -c HEAD
   st = status
   type = cat-file -t
@@ -66,8 +67,27 @@
   verbose = true
 
 [core]
-  editor = vim
+  editor = nvim
   excludesfile = ~/.gitignore_global
+  attributesfile = ~/.gitattributes
+  pager = delta
+
+[delta]
+  light = true
+  line-numbers = true
+  navigate = true
+  paging = always
+  features = tweaks
+
+# Adjustments to the default style, which puts too much emphasis on the hunks
+[delta "tweaks"]
+  commit-decoration-style = box ul bold brightblack
+  file-decoration-style = box black
+  file-style = brightblack bold
+  hunk-header-line-number-style = blue bold
+  hunk-header-decoration-style =
+  hunk-header-file-style = brightblack
+  hunk-header-style = syntax brightwhite bold line-number
 
 [diff]
   tool = vimdiff
@@ -75,6 +95,12 @@
 # Use `hexdump` to diff binary files
 [diff "bin"]
   textconv = hexdump -v -C
+
+[diff "rspec"]
+  xfuncname = "^[ \t]*((RSpec|describe|context|it|before|after|around|feature|scenario)[ \t].*)$"
+
+[fetch]
+  prune = true
 
 [filter "lfs"]
   required = true
@@ -90,6 +116,9 @@
 # Use this for adding username, email and signing key
 [include]
   path = ~/.gitconfig.after
+
+[interactive]
+  diffFilter = delta --color-only
 
 [pull]
   rebase = true

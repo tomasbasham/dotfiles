@@ -28,10 +28,9 @@
 #  1.   SSH escape sequences
 #  2.   History
 #  3.   Google Cloud SDK
-#  4.   nvm
-#  5.   rbenv
-#  6.   swiftenv
-#  7.   virtualenv
+#  4.   nodenv
+#  5.   pyenv
+#  6.   rbenv
 #
 #  ---------------------------------------------------------------------------
 
@@ -69,13 +68,20 @@ if [[ -f "$HOME/.google-cloud-sdk/path.bash.inc" ]]; then
  source "$HOME/.google-cloud-sdk/path.bash.inc"
 fi
 
-# -----------
-# --- nvm ---
-# -----------
+# -------------
+# --- mcfly ---
+# -------------
 
-if [[ -f "$HOME/.nvm/nvm.sh" ]]; then
-  source "$HOME/.nvm/nvm.sh"
-  nvm use default &> /dev/null
+if [[ -n "$(command -v mcfly)" ]]; then
+  eval "$(mcfly init bash)"
+fi
+
+# --------------
+# --- nodenv ---
+# --------------
+
+if [[ -n "$(command -v nodenv)" ]]; then
+  eval "$(nodenv init -)"
 fi
 
 # -------------

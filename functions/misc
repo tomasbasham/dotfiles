@@ -1,0 +1,25 @@
+# vim: set ft=sh:
+
+# Place the local host's public key in the remote host's authorized keys
+infect() {
+  ssh "$@" "mkdir -p ~/.ssh; echo '$(cat ~/.ssh/id_rsa.pub)' >> ~/.ssh/authorized_keys";
+}
+
+# List programs running on a port
+pslisten() {
+  lsof -Pn -i:$1
+}
+
+# curl with authorization header set
+curl_secure() {
+  if [ $# -ne 2 ]; then
+    echo "host and token are required"
+    exit 1
+  fi
+  curl $1 -H "Authorization: Bearer $2"
+}
+
+# Shrink Docker.qcow2
+shrink() {
+  docker run --rm -it --privileged --pid=host walkerlee/nsenter -t 1 -m -u -i -n fstrim /var/lib/docker
+}

@@ -13,9 +13,6 @@
 #
 #  ---------------------------------------------------------------------------
 
-# I will forget everything in this file (likely this too)
-alias aliases='cat $HOME/.bash_aliases'
-
 # Monitor logs
 alias syslog='sudo tail -100f /var/log/syslog'
 alias messages='sudo tail -100f /var/log/messages'
@@ -68,7 +65,8 @@ alias cwd='printf "%q\n" "${PWD##*/}"'
 alias add-ssh='ssh-add `grep -RnlE1 "BEGIN.+PRIVATE KEY" $HOME/.ssh`'
 alias agent-extra-socket='gpgconf --list-dirs agent-extra-socket'
 alias cls="clear && printf '\e[3J'"
-alias escape='sed '"'"'s/ /\\ /g'"'"'' # find . -path ./Library -prune -o -print | grep ".DS_Store" | escape | xargs rm -vr
+alias escape='sed '"'"'s/ /\\ /g'"'"''
+alias grep='grep --color=auto'
 alias path='tr ":" "\n" <<< "$PATH"'
 alias rmrf='rm -rf'
 alias utcnow='date -u +%FT%TZ'
@@ -91,8 +89,9 @@ alias sudo_make_me_a_sandwich='echo "ok"'
 alias archive='tar -cvzf'
 alias extract='tar -xvzf'
 
-# Haskell
-alias haskell='ghci'
+# vim
+alias vim='nvim'
+alias vi='nvim'
 
 # macOS specific aliases
 if [[ "${OSTYPE}" =~ "darwin" ]]; then

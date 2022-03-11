@@ -1,0 +1,11 @@
+# vim: set ft=sh:
+
+# Create a directory and immediately change into that directory
+#
+# Usage: take path/to/directoy
+#
+# Given a directory path, create all missing directories before immediately
+# changing into that directory.
+take() {
+  mkdir -p $@ && cd ${@:$#}
+}
