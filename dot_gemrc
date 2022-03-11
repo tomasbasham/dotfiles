@@ -1,0 +1,10 @@
+# -*-mode:gemrc-*- vim:ft=yaml
+
+# ~/.gemrc
+# =============================================================================
+# Configures default options for gem
+
+# Don't install documentation.
+gem: --no-document
+install: --no-ri --no-rdoc
+update: --no-ri --no-rdoc
