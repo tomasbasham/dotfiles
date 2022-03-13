@@ -1,4 +1,4 @@
-# dotfiles
+# dotfiles ![test](https://github.com/tomasbasham/dotfiles/workflows/test/badge.svg)
 
 This is a collection of configurations and scripts I use for customising Linux,
 macOS, and Windows based systems.

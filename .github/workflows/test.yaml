@@ -1,0 +1,38 @@
+name: test
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chezmoi:
+        - "latest"
+        - "v2.14.0"
+    steps:
+    - uses: actions/checkout@v2
+    - name: install
+      run: sh -c "$(curl -fsLS chezmoi.io/get)" -- -t ${{ matrix.chezmoi }}
+    - name: chezmoi init
+      run: |
+        mkdir -p $HOME/.config/chezmoi
+        tee -a $HOME/.config/chezmoi/chezmoi.yaml <<EOF
+        ---
+        sourceDir: "${{ github.workspace }}"
+
+        diff:
+          exclude:
+          - scripts
+          format: git
+
+        data:
+          email: "me@tomasbasham.dev"
+          name: "Tomas Basham"
+          username: "tomasbasham"
+          signingkey: "abc123"
+        EOF
+    - name: chezmoi apply
+      run: "./bin/chezmoi apply -v --dry-run"
