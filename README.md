@@ -1,7 +1,7 @@
 # dotfiles
 
-This README outlines the details of collaborating on this repository. A short
-introduction of this repository could easily go here.
+This is a collection of configurations and scripts I use for customising Linux,
+macOS, and Windows based systems.
 
 ## Prerequisites
 
