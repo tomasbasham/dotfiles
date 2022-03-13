@@ -1,0 +1,10 @@
+# -*-mode:digrc-*- vim:ft=dosini
+
+# ~/.digrc
+# =============================================================================
+# Configures default options for dig
+#
+# See https://linux.die.net/man/1/dig
+
+# Print only the IP address.
++noall +answer
