@@ -13,3 +13,7 @@ CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 LICENSE.md
 README.md
+
+{{- if ne .chezmoi.os "windows" }}
+_curlrc
+{{- end -}}
