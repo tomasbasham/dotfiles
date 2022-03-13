@@ -1,0 +1,74 @@
+# -*-mode:inputrc-*- vim:ft=dosini
+
+# ~/.inputrc
+# =============================================================================
+# User configuration file of GNU readline, which provides customisable
+# command line user interfaces for many important interactive programs, such as
+# Bash and Python interactive shells.
+#
+# See https://www.gnu.org/software/bash/manual/html_node/Readline-Init-File.html
+
+{{- /* This file supports Go's text/template language. */}}
+
+{{ if eq .chezmoi.os "linux" -}}
+# Include OS defaults
+$include /etc/inputrc
+{{- end }}
+
+# Enable vi mode
+set editing-mode vi
+
+# Apply only if vi mode is active
+$if mode=vi
+  # Show vi mode explicitly as '+' (insert) and ':' (command)
+  set show-mode-in-prompt on
+  set vi-ins-mode-string \1\e[90m\2+\1\e[0m\2
+  set vi-cmd-mode-string \1\e[90m\2:\1\e[0m\2
+
+  # Enable ^l shortcut for clearing the screen in insert mode
+  set keymap vi-insert
+  Control-l:clear-screen
+$endif
+
+# Do not produce horrible sounds ever
+set bell-style visible
+
+# Visually show opening bracket when closing is entered
+set blink-matching-paren on
+
+# Paste multi line commands as a single command
+set enable-bracketed-paste on
+
+# Show different files types in color when listing completion candidates
+set colored-stats on
+set visible-stats on
+
+# Immediately list all completion matches
+"\C-i": menu-complete
+set show-all-if-ambiguous on
+set show-all-if-unmodified on
+
+# Use the text that has already been typed as the prefix for searching through
+# commands (i.e. more intelligent Up/Down behavior)
+"\e[B": history-search-forward
+"\e[A": history-search-backward
+
+# Immediately add a trailing slash when autocompleting symlinks to directories
+set mark-symlinked-directories on
+
+# Show common completion prefix in color
+set colored-completion-prefix on
+
+# Perform case-insensitive completion matching
+set completion-ignore-case on
+
+# Treat '-' and '_' equivalently when performing completion matching
+set completion-map-case on
+
+# Match hidden files without explicitly prefixing them with '.'
+set match-hidden-files on
+
+# when performing completion in the middle of a word, do not insert characters
+# from the completion that match characters after point in the word being
+# completed
+set skip-completed-text on
