@@ -13,59 +13,36 @@ if ! type 'take' &> /dev/null; then
   # Creates a directory and changes to it.
   # Syntax: `take <directory>`
   take() {
-    if [ -z "$1" ]; then
+    if [ -z "${1}" ]; then
       echo "mkdir [-pv] [-m mode] directory ..."
       return 64
     fi
 
-    mkdir -p -- "$@" && cd -P -- "$_" || exit;
+    mkdir -p -- "${@}" && cd -P -- "${_}" || exit;
   }
 fi
 
-# Defer initialization steps until one or more trigger commands is invoked.
+# Update the path of the unix file socket the ssh-agent uses for communication
+# with other processes. This is useful when working with tmux which does not
+# handle the SSH_AUTH_SOCK environment variable well.
 #
-# Given an initialization_function and a list of commands that depend on that
-# initialization_function, lazy_load creates a stub for each command that runs
-# the initialization_function before invoking the command. It also unloads the
-# stub, so the next time the command is ran, it's ran directly.
-#
-# Syntax: lazy_load <initialization_function> <cmd1> [ <cmd2> [..] ]
-lazy_load() {
-  if [ $# -lt 2 ]; then
-    echo "Usage: lazy_load <initialization_function> <cmd> [ <cmd2> [..] ]"
-    return
-  fi
-
-  # name of the function that will be called to initialize the tool
-  local init_func="$1"
-  shift
-  # one or more commands to trigger initialization of the tool
-  local cmd_list=( "$@" )
-
-  # create a stub function for each command
-  for cmd in "${cmd_list[@]}"; do
-    # define cmd as a function
-    # shellcheck disable=SC2145,SC2294
-    eval "function $cmd() {
-      echo \"Lazy loading $cmd...\"
-      # destroy all stub functions related to init_func
-      unset -f ${cmd_list[@]}
-      # run init_func
-      $init_func
-      # run the command this stub was wrapping
-      $cmd \$@
-    }"
-  done
-}
-
+# Syntax: update_auth_sock
 update_auth_sock() {
-  local sock="/tmp/ssh-agent-$USER-screen"
+  local sock="/tmp/ssh-agent-${USER}-screen"
 
   if test "${SSH_AUTH_SOCK}" && [ "${SSH_AUTH_SOCK}" != "${sock}" ]; then
     rm -f "${sock}"
     ln -sf "${SSH_AUTH_SOCK}" "${sock}"
-    export SSH_AUTH_SOCK=$sock
+    export SSH_AUTH_SOCK="${sock}"
   fi
+}
+
+# Set the path of the unix file socket the ssh-agent uses for communication
+# with other processes to that of the GnuPG agent.
+#
+# Syntax: gpg_auth_sock
+gpg_auth_sock () {
+  SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket) "${@}"
 }
 
 # ==================
@@ -78,13 +55,13 @@ update_auth_sock() {
 # Syntax: infect root@111.222.111.222
 function infect() {
   # shellcheck disable=SC2029
-  ssh "$@" "mkdir -p ~/.ssh; echo '$(cat ~/.ssh/id_rsa.pub)' >> ~/.ssh/authorized_keys";
+  ssh "${@}" "mkdir -p ~/.ssh; echo '$(cat ~/.ssh/id_rsa.pub)' >> ~/.ssh/authorized_keys";
 }
 
 # List programs running on a port.
 # Syntax: pslisten 80
 pslisten() {
-  lsof -Pn -i:"$1"
+  lsof -Pn -i:"${1}"
 }
 
 # =============
@@ -93,46 +70,10 @@ pslisten() {
 
 # Convert a gif to mp4.
 gif2mp4() {
-  ffmpeg -i "$1" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "$2"
+  ffmpeg -i "${1}" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "${2}"
 }
 
 # Convert a vid to webm.A
 vid2webm() {
-  ffmpeg -i "$1" -vcodec libvpx -acodec libvorbis -isync -copyts -aq 80 -threads 3 -qmax 30 -y "$2" "${1}.webm"
+  ffmpeg -i "${1}" -vcodec libvpx -acodec libvorbis -isync -copyts -aq 80 -threads 3 -qmax 30 -y "${2}" "${1}.webm"
 }
-
-# ==============
-# === nodenv ===
-# ==============
-
-nodenv_init() {
-  if [ -n "$(command -v nodenv)" ]; then
-    eval "$(nodenv init -)"
-  fi
-}
-
-lazy_load nodenv_init node npm npx yarn
-
-# =============
-# === pyenv ===
-# =============
-
-pyenv_init() {
-  if [ -n "$(command -v pyenv)" ]; then
-    eval "$(pyenv init -)"
-  fi
-}
-
-lazy_load pyenv_init python pip
-
-# =============
-# === rbenv ===
-# =============
-
-rbenv_init() {
-  if [ -n "$(command -v rbenv)" ]; then
-    eval "$(rbenv init -)"
-  fi
-}
-
-lazy_load rbenv_init ruby

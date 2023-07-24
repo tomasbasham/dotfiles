@@ -74,7 +74,7 @@ if type 'atop' &> /dev/null; then
 elif type 'htop' &> /dev/null; then
   alias top='htop'
 elif type 'ntop' &> /dev/null; then
-  if [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+  if [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
     alias top='ntop'
   fi
 fi
@@ -84,6 +84,12 @@ if type 'nvim' &> /dev/null; then
   alias vim='nvim'
   alias vi='nvim'
   alias oldvim='\vim'
+fi
+
+# Avoid issues with environment variables mangling in tmux's subshells when
+# using direnv.
+if type 'direnv' &> /dev/null; then
+  alias tmux='direnv exec / tmux'
 fi
 
 # =======================
@@ -96,7 +102,7 @@ alias rmrf='rm -rf'
 # Print each PATH entry on a separate line.
 alias path='echo -e ${PATH//:/\\n}'
 
-# Become root user preserving the current users environmet variables.
+# Become root user preserving environment variables.
 alias esudo='sudo -Ei'
 
 # Clear both the screen and the buffer history.
@@ -120,13 +126,18 @@ alias extract='tar -xvzf'
 alias map='xargs -n1'
 
 # Reload the shell.
-alias reload='exec $SHELL -l'
+alias reload='exec ${SHELL} -l'
 
 # Canonical hex dump; some systems have this symlinked.
 if ! command -v hd > /dev/null; then
   if command -v hexdump > /dev/null; then
     alias hd='hexdump'
   fi
+fi
+
+if command -v jq > /dev/null; then
+  alias jwtheader="jq -R 'split(\".\") | .[0] | @base64d | fromjson'"
+  alias jwtpayload="jq -R 'split(\".\") | .[1] | @base64d | fromjson'"
 fi
 
 # ==================
@@ -226,7 +237,7 @@ fi
 # Calculate SHA1 hashes.
 if ! command -v sha1sum > /dev/null; then
   if command -v shasum > /dev/null; then
-    alias sha1sum='shasum -a 1 -p'
+    alias sha1sum='shasum -a 1'
   else
     alias sha1sum='openssl sha1 -r'
   fi
@@ -235,7 +246,7 @@ fi
 # Calculate SHA256 hashes.
 if ! command -v sha256sum > /dev/null; then
   if command -v shasum > /dev/null; then
-    alias sha256sum='shasum -a 256 -p'
+    alias sha256sum='shasum -a 256'
   else
     alias sha256sum='openssl sha256 -r'
   fi
@@ -246,16 +257,16 @@ fi
 # ==================
 
 # Ping hostname(s) 30 times in quick succession.
-if [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+if [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   alias fastping='ping -n 30'
 else
   alias fastping='ping -c 30 -i.2'
 fi
 
 # Flush the DNS cache.
-if [[ "$OSTYPE" =~ ^darwin ]]; then
+if [[ "${OSTYPE}" =~ ^darwin ]]; then
   alias flushdns='dscacheutil -flushcache; sudo killall -HUP mDNSResponder;echo DNS cache flushed'
-elif [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+elif [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   alias flushdns='ipconfig //flushdns'
 else
   alias flushdns='sudo /etc/init.d/dns-clean restart && echo DNS cache flushed'
@@ -265,9 +276,9 @@ fi
 alias ips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }'"
 
 # Get local IP address.
-if [[ "$OSTYPE" =~ ^darwin ]]; then
+if [[ "${OSTYPE}" =~ ^darwin ]]; then
   alias localip='ipconfig getifaddr en0'
-elif [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+elif [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   # shellcheck disable=SC2142
   alias localip="netstat -rn | grep -w '0.0.0.0' | awk '{print \$4}'"
 else
@@ -288,9 +299,9 @@ fi
 # ========================
 
 # Lock the session.
-if [[ "$OSTYPE" =~ ^darwin ]]; then
+if [[ "${OSTYPE}" =~ ^darwin ]]; then
   alias lock='pmset displaysleepnow'
-elif [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+elif [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   alias lock='rundll32.exe user32.dll,LockWorkStation'
 elif command -v vlock &> /dev/null; then
   alias lock='vlock --all'
@@ -299,27 +310,27 @@ elif command -v gnome-screensaver-command &> /dev/null; then
 fi
 
 # Hibernate the system.
-if [[ "$OSTYPE" =~ ^darwin ]]; then
+if [[ "${OSTYPE}" =~ ^darwin ]]; then
   alias hibernate='pmset sleep now'
-elif [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+elif [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   alias hibernate='shutdown.exe /h'
 else
   alias hibernate='systemctl suspend'
 fi
 
 # Restart the system.
-if [[ "$OSTYPE" =~ ^darwin ]]; then
+if [[ "${OSTYPE}" =~ ^darwin ]]; then
   alias reboot='osascript -e "tell application \"System Events\" to restart"'
-elif [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+elif [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   alias reboot='shutdown.exe /r'
 else
   alias reboot='sudo /sbin/reboot'
 fi
 
 # Shutdown the system.
-if [[ "$OSTYPE" =~ ^darwin ]]; then
+if [[ "${OSTYPE}" =~ ^darwin ]]; then
   alias poweroff='osascript -e "tell application \"System Events\" to shut down"'
-elif [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+elif [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   alias poweroff='shutdown.exe /s'
 else
   alias poweroff='sudo /sbin/poweroff'
@@ -330,9 +341,9 @@ fi
 # ================
 
 # List drive mounts.
-if [[ "$OSTYPE" =~ ^darwin ]]; then
+if [[ "${OSTYPE}" =~ ^darwin ]]; then
   alias mnt='mount | grep -E ^/dev | column -t'
-elif [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+elif [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   alias mnt='mount | sed "s/Program Files/Program-Files/i" | column -t'
 else
   # shellcheck disable=2142
@@ -341,15 +352,15 @@ fi
 
 # Print the last 100 entires of the syslog and message.
 # The command will continue to follow the output.
-if [[ ! "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+if [[ ! "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
   alias syslog='sudo tail -100f /var/log/syslog'
   alias messages='sudo tail -100f /var/log/messages'
 fi
 
 # Display information about the system.
 for command in winfetch neofetch screenfetch; do
-  if type $command &> /dev/null; then
-    alias sysinfo='$command'
+  if type "${command}" &> /dev/null; then
+    alias sysinfo='${command}'
     break
   fi
 done
@@ -358,7 +369,7 @@ done
 # === macOS ===
 # =============
 
-if [[ "$OSTYPE" =~ ^darwin ]]; then
+if [[ "${OSTYPE}" =~ ^darwin ]]; then
   # Toggle display of desktop icons (useful when presenting).
   alias hidedesktop='defaults write com.apple.finder CreateDesktop -bool false && killall Finder'
   alias showdesktop='defaults write com.apple.finder CreateDesktop -bool true && killall Finder'
@@ -396,22 +407,27 @@ fi
 
 # Navigate to Chezmoi's local repo.
 if command -v chezmoi > /dev/null; then
-  if [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
+  if [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
     # TODO verify
     # shellcheck disable=2142
     alias chezmoiconf="cd \$(chezmoi source-path | tr '\\/' '/' | tr -d ':' | awk '{print \$1}')"
   else
     alias chezmoiconf='cd $(chezmoi source-path)'
+    alias chezmoidiff='chezmoi diff --color true | less -R'
   fi
 else
-  alias chezmoiconf='cd $HOME/.local/share/chezmoi'
+  alias chezmoiconf='cd ${HOME}/.local/share/chezmoi'
+fi
+
+if command -v nvim > /dev/null; then
+  alias vimconf='cd ${HOME}/.config/nvim'
 fi
 
 # Navigate to Powershell's profile location.
-if [[ "$OSTYPE" =~ ^(cygwin|mingw|msys) ]]; then
-  alias powershellconf='cd $HOME/Documents/PowerShell'
+if [[ "${OSTYPE}" =~ ^(cygwin|mingw|msys) ]]; then
+  alias powershellconf='cd ${HOME}/Documents/PowerShell'
 else
-  alias powershellconf='cd $HOME/.config/powershell'
+  alias powershellconf='cd ${HOME}/.config/powershell'
 fi
 
 # ===============
@@ -420,14 +436,14 @@ fi
 
 # Display detailed weather and forecast.
 if command -v curl > /dev/null; then
-  alias forecast='curl --silent --compressed --max-time 10 --url "https://wttr.in?F"'
+  alias forecast='curl --silent --compressed --max-time 10 --url "https://wttr.in/Greenwich,%20London?mAFI"'
 else
-  alias forecast='wget -qO- --compression=auto --timeout=10 "https://wttr.in?F"'
+  alias forecast='wget -qO- --compression=auto --timeout=10 "https://wttr.in/Greenwich,%20London?mAFI"'
 fi
 
 # Display current weather.
 if command -v curl > /dev/null; then
-  alias weather='curl --silent --compressed --max-time 10 --url "https://wttr.in/?format=%l:+(%C)+%c++%t+\[%h,+%w\]"'
+  alias weather='curl --silent --compressed --max-time 10 --url "https://wttr.in/Greenwich,%20London?m&format=%l:+(%C)+%c++%t+\[%h,+%w\]\n"'
 else
-  alias weather='wget -qO- --compression=auto --timeout=10 "https://wttr.in/?format=%l:+(%C)+%c++%t+\[%h,+%w\]"'
+  alias weather='wget -qO- --compression=auto --timeout=10 "https://wttr.in/Greenwich,%20London?m&format=%l:+(%C)+%c++%t+\[%h,+%w\]\n"'
 fi
