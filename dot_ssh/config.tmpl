@@ -15,8 +15,14 @@ Host *
 {{- if ne .chezmoi.os "windows" }}
   # Accelerate connections by reusing existing connections to the same host.
   ControlMaster auto
-  ControlPath ~/.ssh/controlmasters/%r@%h:%p
   ControlPersist 5
+
+  # When ControlPath is used in conjunction with ControlMaster, specifies the
+  # directory to store master connection socket files.
+  #
+  # Should be set on a per host basis otherwise it is not possible to access
+  # the console via ~C escape sequence.
+  # ControlPath ~/.ssh/controlmasters/%r@%h:%p
 {{ end }}
   # Allow storing passphrases in the macOS keychain.
   # See https://developer.apple.com/library/archive/technotes/tn2449/_index.html
@@ -32,6 +38,7 @@ Host *
   UseRoaming no
 
   IdentityFile ~/.ssh/id_rsa
+  # PKCS11Provider /usr/local/lib/libykcs11.dylib
   XAuthLocation /opt/X11/bin/xauth
 
 # Host example

@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 # -*-mode:sh-*- vim:ft=sh
 
-# vim_plug
+# update_vim_plugins
 # =============================================================================
-# Install vim plugins and quit immediately.
+# Update vim plugins and quit immediately.
 
 # dot_vimrc hash: {{ include "dot_vimrc" | sha256sum }}
-vim +PlugInstall +qall
+nvim --headless "+Lazy! update" +qall
+nvim --headless +TSUpdateSync '+echo("\n")' +qall
