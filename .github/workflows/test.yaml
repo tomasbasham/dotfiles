@@ -1,8 +1,10 @@
+---
 name: test
 on:
   pull_request:
   push:
     branches:
+    - gh-readonly-queue/**
     - master
 jobs:
   test:
@@ -10,10 +12,10 @@ jobs:
     strategy:
       matrix:
         chezmoi:
-        - "latest"
-        - "v2.14.0"
+        - latest
+        - v2.14.0
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: install
       run: sh -c "$(curl -fsLS chezmoi.io/get)" -- -t ${{ matrix.chezmoi }}
     - name: chezmoi init
@@ -35,4 +37,4 @@ jobs:
           signingkey: "abc123"
         EOF
     - name: chezmoi apply
-      run: "./bin/chezmoi apply -v --dry-run"
+      run: ./bin/chezmoi apply -v --dry-run

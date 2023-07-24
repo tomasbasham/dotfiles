@@ -1,4 +1,5 @@
-# -*-mode:bash-*- vim:ft=bash
+# -*-mode:bash-*- vim:ft=sh
+# shellcheck shell=sh disable=SC1090,SC1091
 
 # ~/.zshrc
 # =============================================================================
@@ -22,6 +23,13 @@ done
 # === Commands ===
 # ================
 
+# Set fpath to include custom functions and completions.
+if [ -d "${HOME}/.local/share" ]; then
+  # cannot use globbing here because the value of fpath is an array of strings.
+  # shellcheck disable=SC2206
+  fpath=("${HOME}/.local/share/functions" "${HOME}/.local/share/zsh-completions" $fpath)
+fi
+
 # Allow long commands to be editied with ctrl+x+e
 autoload -U edit-command-line
 zle -N edit-command-line
@@ -36,45 +44,50 @@ autoload -Uz compinit && compinit -i
 zstyle ':completion:*' menu select
 
 # use the same colors for completion as ls
-zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
-# Still use emacs-style zsh bindings.
-# This is preventing McFly from working inside of tmux
-# bindkey -e
+# use emacs-style zsh bindings.
+# a full list of bindings can be found with the command: `bindkey -M emacs`
+bindkey -e
 
 # emacs-style zsh bindings
-bindkey "^A"    beginning-of-line
-bindkey "^E"    end-of-line
-
-# other bindings
-bindkey "^[[1~" beginning-of-line
-bindkey "^[[4~" end-of-line
-bindkey "^[[5~" beginning-of-history
-bindkey "^[[6~" end-of-history
-bindkey "^[[3~" delete-char
-bindkey "e[2~"  quoted-insert
-bindkey "e[5C"  forward-word
-bindkey "eOc"   emacs-forward-word
-bindkey "e[5D"  backward-word
-bindkey "eOd"   emacs-backward-word
-bindkey "ee[C"  forward-word
-bindkey "ee[D"  backward-word
-bindkey "^H"    backward-delete-word
+bindkey "^A"      beginning-of-line
+bindkey "^E"      end-of-line
+bindkey "^U"      backward-kill-line
+bindkey "^H"      backward-delete-word
 
 # for rxvt
-bindkey "e[8~"  end-of-line
-bindkey "e[7~"  beginning-of-line
+bindkey "\e[8~"    end-of-line
+bindkey "\e[7~"    beginning-of-line
 
 # for non RH/Debian xterm, can't hurt for RH/DEbian xterm
-bindkey "eOH"   beginning-of-line
-bindkey "eOF"   end-of-line
+bindkey "\eOH"     beginning-of-line
+bindkey "\eOF"     end-of-line
 
 # for freebsd console
-bindkey "e[H"   beginning-of-line
-bindkey "e[F"   end-of-line
+bindkey "\e[H"     beginning-of-line
+bindkey "\e[F"     end-of-line
 
 # completion in the middle of a line
-bindkey '^i'    expand-or-complete-prefix
+bindkey '^i'     expand-or-complete-prefix
+
+# other bindings
+bindkey "^[[1~"   beginning-of-line
+bindkey "^[[4~"   end-of-line
+bindkey "^[[5~"   beginning-of-history
+bindkey "^[[6~"   end-of-history
+bindkey "^[[3~"   delete-char
+bindkey "^[[1;2C" forward-word
+bindkey "^[[1;2D" backward-word
+bindkey "^[[H"    beginning-of-line
+bindkey "^[[F"    end-of-line
+
+# ===================
+# === Corrections ===
+# ===================
+
+setopt correct     # enable command auto-correction
+# setopt correct_all # enable argument auto-correction
 
 # =================
 # === Directory ===
@@ -96,8 +109,9 @@ unsetopt flow_control # Allow commands to be parked with ctrl+q
 # === Google Cloud SDK ===
 # ========================
 
-if [ -f "$HOME/.local/google-cloud-sdk/path.zsh.inc" ]; then
-  source "$HOME/.local/google-cloud-sdk/path.zsh.inc"
+if [ -f "${HOME}/.local/share/google-cloud-sdk/path.zsh.inc" ]; then
+  source "${HOME}/.local/share/google-cloud-sdk/path.zsh.inc"
+  source "${HOME}/.local/share/google-cloud-sdk/completion.zsh.inc"
 fi
 
 # ===========
@@ -107,7 +121,7 @@ fi
 # This create-socketdir command is only required if a non default home
 # directory is used and the /run based sockets shall be used. For the default
 # home directory GnUPG creates a directory on the fly.
-if [[ ! -d ${HOME}/.gnupg && ( -d /run/user || -d /var/run/user ) ]]; then
+if [[ ! -d "${HOME}/.gnupg" && ( -d /run/user || -d /var/run/user ) ]]; then
   gpgconf --create-socketdir
 fi
 
@@ -115,9 +129,9 @@ fi
 # === History ===
 # ===============
 
-[ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
-[ "$HISTSIZE" -lt 50000 ] && HISTSIZE=50000
-[ "$SAVEHIST" -lt 10000 ] && SAVEHIST=10000
+[ -z "${HISTFILE}" ] && HISTFILE="${HOME}/.zsh_history"
+[ "${HISTSIZE}" -lt 50000 ] && HISTSIZE=50000
+[ "${SAVEHIST}" -lt 10000 ] && SAVEHIST=10000
 
 setopt extended_history       # Record timestamp of command in HISTFILE
 setopt hist_expire_dups_first # Delete duplicates first when HISTFILE size exceeds HISTSIZE
@@ -126,14 +140,30 @@ setopt hist_ignore_space      # Ignore commands that start with space
 setopt hist_find_no_dups      # Ignore duplicated commands when searching
 setopt hist_reduce_blanks     # Remove whitespace from commands before adding to history
 setopt hist_verify            # Show command with history expansion to user before running it
+setopt append_history         # Append to history
+setopt inc_append_history     # Adds commands as they are typed, not at shell exit
 # setopt share_history          # Share command history data
 
 # Cycle through history with the up and down arrow keys.
 autoload -U history-search-end
 zle -N history-beginning-search-backward-end history-search-end
 zle -N history-beginning-search-forward-end history-search-end
+
+# macOS
 bindkey "^[[A" history-beginning-search-backward-end
 bindkey "^[[B" history-beginning-search-forward-end
+
+# Linux
+bindkey "^[OA" history-beginning-search-backward-end
+bindkey "^[OB" history-beginning-search-forward-end
+
+# ==============
+# === zoxide ===
+# ==============
+
+if [[ -n "$(command -v zoxide)" ]]; then
+  eval "$(zoxide init zsh)"
+fi
 
 # =============
 # === mcfly ===
@@ -149,7 +179,7 @@ fi
 
 git_prompt() {
   ref=$(git symbolic-ref HEAD | cut -d'/' -f3)
-  echo $ref
+  echo "${ref}"
 }
 
 setopt prompt_subst
@@ -164,6 +194,7 @@ zstyle ':vcs_info:*' enable git cvs svn
 zstyle ':vcs_info:git:*' formats ' (%b)'
 
 vcs_info
+# shellcheck disable=SC2016 disable=SC2034
 PROMPT='%B%n@%m%b:%~${vcs_info_msg_0_}$ '
 
 # ===========
@@ -171,6 +202,17 @@ PROMPT='%B%n@%m%b:%~${vcs_info_msg_0_}$ '
 # ===========
 
 update_auth_sock
+
+# ==============
+# === direnv ===
+# ==============
+
+# For the environment to be configured correctly direnv must be placed last in
+# this file so not to conflict with other environemnt variables.
+
+if [[ -n "$(command -v direnv)" ]]; then
+  eval "$(direnv hook zsh)"
+fi
 
 # Load additional configurations.
 if [ -f "${HOME}/.zshrc.after" ]; then

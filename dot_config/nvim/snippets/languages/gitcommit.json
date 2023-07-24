@@ -1,0 +1,9 @@
+{
+  "coauthor": {
+    "prefix": "coauthor",
+    "body": [
+      "Co-authored-by: $1 <$2>"
+    ],
+    "description": "Git Co-Author"
+  }
+}

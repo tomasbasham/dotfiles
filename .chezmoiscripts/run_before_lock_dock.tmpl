@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# -*-mode:sh-*- vim:ft=sh
+
+# lock_dock
+# =============================================================================
+# Force the macOS Dock to be a fixed size and prevent it from being accidently
+# resized.
+#
+# To unlock the Dock size run:
+#   defaults write com.apple.Dock size-immutable -bool false; killall Dock
+
+{{- if eq .chezmoi.os "darwin" }}
+defaults write com.apple.Dock tilesize -integer 78
+defaults write com.apple.Dock size-immutable -bool true
+killall Dock
+{{- end -}}

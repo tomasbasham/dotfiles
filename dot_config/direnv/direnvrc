@@ -1,0 +1,85 @@
+# -*-mode:bash-*- vim:ft=bash
+
+# Usage: use go
+#
+# Loads the specified go version into the environment.
+#
+use_go() {
+  layout go
+}
+
+# Usage: use python
+#
+# Uses python3 and venv to create a virtual environment in the project
+# directory.
+#
+use_python() {
+  layout python
+}
+
+# Usage: use ruby [<version>]
+#
+# Loads the specified Ruby version into the environment.
+#
+# If a partial Ruby version is passed (i.e. `3.1`), a fuzzy match is performed
+# and the highest matching version installed is selected.
+#
+# If no version is passed, it will look at the '.ruby-version' files in the
+# current directory if they exist.
+#
+# Environment Variables:
+#
+# - $RUBY_VERSION_PREFIX (optional) [default="ruby-"]
+#   Overrides the default version prefix.
+#
+use_ruby() {
+  local version=${1:-}
+  local version_file=""
+  local ruby_dir=$HOME/.rubies
+  local ruby_version_prefix=${RUBY_VERSION_PREFIX-ruby-}
+  local search_version
+  local ruby_prefix
+
+  if [[ -z $version && -f .ruby-version ]]; then
+    version=$(<.ruby-version)
+    version_file=".ruby-version"
+  fi
+
+  if [[ -z $version ]]; then
+    log_error "Unable to load Ruby because no version has been specified!"
+    return 1
+  fi
+
+  # Search for the highest version matching $version in the folder
+  search_version=$(semver_search "${ruby_dir}" "${ruby_version_prefix}" "${version}")
+  ruby_prefix="${ruby_dir}/${ruby_version_prefix}${search_version}"
+
+  if [[ ! -d $ruby_prefix ]]; then
+    log_error "Unable to find Ruby version ($version) in ($ruby_dir)!"
+    return 1
+  fi
+
+  if [[ ! -x $ruby_prefix/bin/ruby ]]; then
+    log_error "Unable to load Ruby binary (ruby) for version ($version) in ($ruby_dir)!"
+    return 1
+  fi
+
+  load_prefix "$ruby_prefix"
+  layout ruby
+
+  if [[ -z $version_file ]]; then
+    log_status "Successfully loaded Ruby $(ruby --version), from prefix ($ruby_prefix)"
+  else
+    log_status "Successfully loaded Ruby $(ruby --version) (via $version_file), from prefix ($ruby_prefix)"
+  fi
+}
+
+# Usage: use sops <secret_file>
+#
+# Export all keys in a sops file as environmet variables.
+#
+use_sops() {
+    local path=${1:-$PWD/secrets.yaml}
+    eval "$(sops -d --output-type dotenv "$path" | direnv dotenv bash /dev/stdin)"
+    watch_file "$path"
+}

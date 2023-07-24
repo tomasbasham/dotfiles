@@ -34,9 +34,13 @@
 
   # Commit changes to the local repository.
   ci = commit
+  cir = commit -eF .git/COMMIT_EDITMSG
 
   # Clones a repository including all submodules.
   cl = clone --recursive
+
+  # Removes branches that have been merged with master (delete merged).
+  cleanup = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
 
   # Switches to an existing branch.
   co = checkout
@@ -50,14 +54,14 @@
   # Discards changes to a file.
   discard = checkout --
 
-  # Removes branches that have been merged with master (delete merged).
-  dm = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
-
   # Pretty-prints object's content.
   dump = cat-file -p
 
   # Lists contributors with number of commits.
   fame = shortlog -s -n --all --no-merges
+
+  # Prints the SHA of the first commit.
+  first = rev-list --max-parents=0 HEAD
 
   # Forces push without overwriting the work of others.
   force = push --force-with-lease
@@ -66,23 +70,27 @@
   # to import packages from the main branch.
   gover = log -1 --format="v0.0.0-%cd-%h" --date=format:"%Y%m%d%H%M%S" --abbrev=12
 
-  # Shows short SHA, description and history graph of commits.
-  graph = log --graph --decorate --oneline --all
+  # Shows short SHA, description, branch, and history graph of commits.
+  graph = log --pretty=format:'%C(yellow)%h %C(reset)%s%C(green)%d' --graph
 
-  # Shows short SHA, date, description, history graph, and author of commits.
-  hist = log --pretty=format:'%C(magenta)%m %C(yellow)%h %C(red)%ai %C(blue)%an %C(cyan)<%ae> %C(reset)%s%C(green)%d' --abbrev-commit --graph --decorate --all
+  # Shows short SHA, datetime, author, description, branch, and history graph of commits.
+  hist = log --pretty=format:'%C(yellow)%H %C(red)%ai %C(blue)%an %C(cyan)<%ae> %C(reset)%s%C(green)%d' --graph --all
 
-  # Shows short SHA, description, and history graph of commits.
-  l = log --pretty=oneline --graph --abbrev-commit
+  # Shows short SHA, description, and branch of commits.
+  ls = log --pretty=format:'%C(yellow)%h %C(reset)%s%C(green)%d'
 
-  # Shows short SHA, description, history graph, time, and author of commits.
-  ll = log --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --graph --abbrev-commit
+  # Shows short SHA, datetime, description, and branch of commits.
+  ll = log --pretty=format:'%C(yellow)%h %C(red)%ai %C(reset)%s%C(green)%d'
 
-  # Shows short SHA, date, description, history graph, and author of commits.
-  lo = log --pretty=format:\"%Cred%h%Creset %Cgreen%ad%Creset | %s%C(auto)%d%Creset %C(bold blue)<%an>%Creset\" --graph --date=short
+  # Shows SHA, datetime, author, description, and branch of commits.
+  la = log --pretty=format:'%C(yellow)%H %C(red)%ai %C(blue)%an %C(cyan)<%ae> %C(reset)%s%C(green)%d'
 
   # Writes dangling objects to lost and found.
   lost = fsck --lost-found
+
+  # Prints the SHA of the Nth commit. This however may not work if the commit
+  # has multiple parents (i.e. a merge commit).
+  nth = "!f() { git rev-list --reverse HEAD | sed -n \"$1p\"; }; f"
 
   # Pulls in remote changes for the current repository and all its submodules.
   pull = pull --recurse-submodules
@@ -94,7 +102,10 @@
   pushall = push --recurse-submodules=on-demand
 
   # List the age of the most recent commits for each branch.
-  refs = for-each-ref --sort='authordate:iso8601' --format=' %(color:green)%(authordate:relative)%09%(color:black)%(refname:short)' refs/heads
+  refs = for-each-ref --sort='authordate:iso8601' --format=' %(color:green)%(authordate:relative)%09%(color:reset)%(refname:short)' refs/heads
+
+  # Resign previous commits.
+  resign = rebase --exec 'git commit --amend --no-edit --reset-author -n -S'
 
   # Shows the current working tree status
   st = status
@@ -105,8 +116,12 @@
   # Shows object type.
   type = cat-file -t
 
+  # Reset the index but not the working tree and reports what has not been
+  # updated.
+  undo = reset HEAD~1 --mixed
+
   # Commits as work in progress.
-  wip = commit -am "wip"
+  wip = commit -am "chore: work in progress"
 
   # Gerrit
 
@@ -149,24 +164,24 @@
 
 [color "branch"]
   current = green bold
-  local = green
-  remote = yellow
+  local   = green
+  remote  = yellow
 
 [color "diff"]
   frag = magenta
   meta = yellow
-  new = green
-  old = red
+  new  = green
+  old  = red
 
 [color "diff-highlight"]
-  oldNormal = red bold
+  oldNormal    = red bold
   oldHighlight = red bold 52
-  newNormal = green bold
+  newNormal    = green bold
   newHighlight = green bold 22
 
 [color "status"]
-  added = green
-  changed = yellow
+  added     = green
+  changed   = yellow
   untracked = red
 
 [commit]
@@ -175,17 +190,17 @@
   gpgsign = true
 {{ end }}
   # Specify template file for new commit messages.
-  template = ~/.gitmessage
+  template = {{ joinPath .chezmoi.homeDir ".gitmessage" }}
 
   # Show changes at the bottom of the commit message.
   verbose = true
 
 [core]
   # Store global exclusions into a custom file.
-  excludesfile = ~/.gitignore_global
+  excludesfile = {{ joinPath .chezmoi.homeDir ".gitignore_global" }}
 
   # Store global attributes into a custom file.
-  attributesfile = ~/.gitattributes
+  attributesfile = {{ joinPath .chezmoi.homeDir ".gitattributes" }}
 
   # Use the delta diff tool.
   pager = delta
@@ -195,24 +210,47 @@
   untrackedCache = true
 
 [delta]
-  light = true
-  line-numbers = true
-  navigate = true
-  paging = always
-  features = tweaks
+  features          = decorations
+  grep-output-type  = ripgrep
+  hyperlinks        = true
+  inspect-raw-lines = true # setting to false disables --color-moved support
+  line-numbers      = true
+  navigate          = true
+  paging            = always
+  syntax-theme      = ansi
 
 # Adjustments to the default style, which puts too much emphasis on the hunks.
-[delta "tweaks"]
-  commit-decoration-style = box ul bold brightblack
-  file-decoration-style = box black
-  file-style = brightblack bold
-  hunk-header-line-number-style = blue bold
-  hunk-header-decoration-style =
-  hunk-header-file-style = brightblack
-  hunk-header-style = syntax brightwhite bold line-number
+[delta "decorations"]
+  blame-palette                 = black brightblack
+  commit-decoration-style       = brightwhite box ul
+  file-decoration-style         = white box
+  file-style                    = brightwhite bold
+  grep-line-number-style        = blue
+  grep-match-line-style         = brightwhite
+  grep-match-word-style         = brightred
+  hunk-header-decoration-style  = brightblack normal dim
+  hunk-header-file-style        = brightwhite
+  hunk-header-line-number-style = blue
+  hunk-header-style             = brightwhite bold line-number
+  line-numbers-minus-style      = red normal
+  line-numbers-plus-style       = green normal
+  line-numbers-zero-style       = white normal
+  minus-emph-style              = brightmagenta black
+  minus-empty-line-marker-style = red normal
+  minus-style                   = red normal
+  plus-emph-style               = brightgreen black
+  plus-empty-line-marker-style  = green normal
+  plus-style                    = green normal
+  whitespace-error-style        = black red
+  zero-style                    = white normal
+
+[delta "interactive"]
+  features = decorations
+  keep-plus-minus-markers = false
 
 [diff]
-  tool = vimdiff
+  colorMoved = default
+  tool       = vimdiff
 
 [diff "bin"]
   # Use `hexdump` to diff binary files.
@@ -238,6 +276,9 @@
   # Turn a content that by itself is unusable into a usable content.
   required = true
 
+[grep]
+  lineNumber = true
+
 [help]
   # Correct and execute mistyped commands after 1 second.
   autocorrect = 10
@@ -247,13 +288,17 @@
 
 [include]
   # Include additional configuration.
-  path = ~/.gitconfig.after
+  path = {{ .chezmoi.homeDir }}/.gitconfig.after
 
 [init]
   defaultbranch = master
+  templateDir   = {{ .chezmoi.homeDir }}/.git_template
 
 [interactive]
-  diffFilter = delta --color-only
+  diffFilter = delta --color-only --features=interactive
+
+[merge]
+  conflictstyle = diff3
 
 [pull]
   rebase = true
@@ -268,6 +313,7 @@
 [rebase]
   # Create a temporary stash entry before the operation begins.
   autostash = true
+  updateRefs = true
 
 [rerere]
   enabled = true

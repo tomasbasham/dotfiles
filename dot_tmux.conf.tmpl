@@ -9,8 +9,16 @@
 
 {{- /* This file supports Go's text/template language. */}}
 
-# set-option -g utf8 on
-# set-option -g status-utf8 on
+# ===============
+# === Colours ===
+# ===============
+
+# selection highlight
+set-option -g mode-style "bg=colour8 fg=colour15"
+
+# tmux command prompt
+set-option -g message-style "bg=colour0 fg=default"
+set-option -g message-command-style "bg=colour0 fg=colour15"
 
 # ================
 # === Versions ===
@@ -22,7 +30,7 @@
 
 # Store the current tmux version in an environment variable to support
 # conditional settings.
-run-shell 'tmux setenv -g TMUX_VERSION $(tmux -V | cut -c 6-)'
+run-shell "tmux setenv -g TMUX_VERSION $(tmux -V | cut -c 6-)"
 
 # This requires a version of `sort' that supports the `-V' option (sort by
 # version numbers).
@@ -32,11 +40,68 @@ run-shell 'tmux setenv -g TMUX_GTE_2_4 $([ "${TMUX_VERSION}" = $(echo "${TMUX_VE
 run-shell 'tmux setenv -g TMUX_GTE_2_7 $([ "${TMUX_VERSION}" = $(echo "${TMUX_VERSION}\n2.7" | sort -rV | head -n1) ] && echo 1)'
 run-shell 'tmux setenv -g TMUX_GTE_2_9 $([ "${TMUX_VERSION}" = $(echo "${TMUX_VERSION}\n2.9" | sort -rV | head -n1) ] && echo 1)'
 
+# ==================
+# === Navigation ===
+# ==================
+
+# http://robots.thoughtbot.com/post/53022241323/seamlessly-navigate-vim-and-tmux-splits
+# http://sourceforge.net/mailarchive/message.php?msg_id=30519263
+# M(eta) is the Alt key both in Vim and tmux.
+
+bind-key -n M-Left  run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Left)  || tmux select-pane -L; exit 0"
+bind-key -n M-Down  run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Down)  || tmux select-pane -D; exit 0"
+bind-key -n M-Up    run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Up)    || tmux select-pane -U; exit 0"
+bind-key -n M-Right run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Right) || tmux select-pane -R; exit 0"
+
+bind-key -n M-h run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Left)  || tmux select-pane -L; exit 0"
+bind-key -n M-j run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Down)  || tmux select-pane -D; exit 0"
+bind-key -n M-k run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Up)    || tmux select-pane -U; exit 0"
+bind-key -n M-l run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Right) || tmux select-pane -R; exit 0"
+
+# Enable mouse support.
+if-shell '[ -n "${TMUX_GTE_2_1}" ]' \
+  "set-option -g mouse on" \
+  "set -g mode-mouse on; set -g mouse-resize-pane on; set -g mouse-select-pane on; set -g mouse-select-window on"
+
+# ======================
+# === Responsiveness ===
+# ======================
+
+# Decrease command delay (increases vim responsiveness)
+set-option -sg escape-time 1
+
+# If using normal keybindings this reduce the repeat time for key strokes when
+# switching ppanes - the default is 500 ms.
+set-option -g repeat-time 300
+
 # =============
 # === Shell ===
 # =============
 
 set-option -g default-shell $SHELL
+
+# ==================
+# === Status Bar ===
+# ==================
+
+set-option -g status-left " [#S] "
+
+set-option -g status-interval 1 # refresh every second (useful for branch/path info)
+set-option -g window-status-separator ''
+set-option -wg window-status-activity-style 'none'
+set-option -wg window-status-bell-style 'fg=colour3'
+set-option -g status-right-length 140
+
+# For the hostname on macOS, it changes depending on the network, so we try to
+# use ComputerName if possible.
+
+set-option -wg window-status-style "bg=colour0 fg=colour7"
+set-option -wg window-status-current-style "bg=terminal fg=colour12"
+set-option -g status-style "bg=colour0 fg=colour15"
+set-option -wg window-status-format "   #I:#W  #[fg=colour7]▕" # │┃
+set-option -g status-right '#[fg=colour7]▏ #[fg=colour13]#{?window_bigger,[#{window_offset_x}#,#{window_offset_y}] ,}#(if [[ "$OSTYPE" = darwin* && -n $(scutil --get ComputerName 2>/dev/null) ]]; then scutil --get ComputerName 2>/dev/null; else hostname | sed "s|\..*||"; fi)  #[fg=colour7]▏ #[fg=colour4]#(echo "#{pane_current_path}" | sed "s|^$HOME|~|" | sed "s|/private/|/|")  #[fg=colour10]#(cd #{pane_current_path}; branch=$(git branch --show-current 2>/dev/null); [[ -n "${branch}" ]] && echo "#[fg=colour7]▏ #[fg=colour2]⎇  $(git branch --show-current)  ")'
+set-option -wg window-status-current-format " ❯ #I:#W  #[fg=colour7]▕"
+set-option -g status-left " [#S]#[fg=colour7]▕"
 
 # ==============================
 # === Terminal Compatibility ===
@@ -50,156 +115,115 @@ set-option -g default-shell $SHELL
 #
 # You must compile the two files "tmux.terminfo" and "tmux-256color.terminfo"
 # with "tic" for this to work.
-#
-set-option default-terminal "tmux-256color"
 
-# set -as terminal-overrides ",xterm*:Tc:smcup@:rmcup@"
+set-option -g default-terminal "tmux-256color"
+
+# Required for Neovim for termguicolors to work, as instructed by :checkhealth.
+set-option -sa terminal-overrides ",xterm-256color:RGB"
 
 # Vim knows that xterm-like terminals support extended sequences for certain
 # modified keys (eg: CMD+Up), but this does not work when using screen TERMs.
 # Setting xterm-keys on allows the use of xterm key bindings in tmux so that
 # the keys can be passed down to vim in xterm format.
-set -g xterm-keys on
-
-# =====================
-# === Mouse Support ===
-# =====================
-
-if-shell '[ -n "${TMUX_GTE_2_1}" ]' \
-  'set-option -g mouse on' \
-  'set -g mode-mouse on; set -g mouse-resize-pane on; set -g mouse-select-pane on; set -g mouse-select-window on'
+set-option -g xterm-keys on
 
 # =========================
-# === Window Management ===
+# === Vim Compatability ===
 # =========================
-
-# Override the new-window shortcut to create a new window in the same directory
-# as the current pane, instead of the default one.
-bind c new-window -c "#{pane_current_path}"
-
-# Think about splits in terms of the orientation of the divider (they do not
-# override the defaults). Each new pane will be created in the same directory
-# as the current pane, instead of the default one..
-bind | split-window -h -c "#{pane_current_path}"
-bind - split-window -v -c "#{pane_current_path}"
-
-# After splitting the window vertically I almost never want a 50/50 split. This
-# convenience binding will reduce the pane size.
-bind _ resize-pane -D 15
-
-# Shift is swallowed by gnome-terminal
-bind-key -n C-Space     select-window -t :+
-bind-key -n M-PageDown  select-window -t :+
-bind-key -n M-PageUp    select-window -t :-
-bind ^b last-window # toggle last window like screen
-
-# If using normal keybindings this reduce the repeat time for key strokes when
-# switching ppanes - the default is 500 ms.
-set-option -g repeat-time 300
-
-# Reorder windows
-bind-key -n C-M-j swap-window -t -1
-bind-key -n C-M-k swap-window -t +1
-
-# ==================
-# === Navigation ===
-# ==================
-
-# http://robots.thoughtbot.com/post/53022241323/seamlessly-navigate-vim-and-tmux-splits
-# http://sourceforge.net/mailarchive/message.php?msg_id=30519263
-# M(eta) is the Alt key both in Vim and tmux.
-
-bind -n M-Left  run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Left)  || tmux select-pane -L; exit 0"
-bind -n M-Down  run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Down)  || tmux select-pane -D; exit 0"
-bind -n M-Up    run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Up)    || tmux select-pane -U; exit 0"
-bind -n M-Right run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Right) || tmux select-pane -R; exit 0"
-
-bind -n M-h run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Left)  || tmux select-pane -L; exit 0"
-bind -n M-j run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Down)  || tmux select-pane -D; exit 0"
-bind -n M-k run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Up)    || tmux select-pane -U; exit 0"
-bind -n M-l run "(tmux display-message -p '#{pane_current_command}' | grep -iq vim && tmux send-keys M-Right) || tmux select-pane -R; exit 0"
-
-# ===================
-# === vim support ===
-# ===================
 
 # Allow vi-like movements when in copy mode, so that it is possible to
 # copy-paste between panes and between the terminal and vim.
 set-window-option -g mode-keys vi
 
 # Make tmux copy mode feel more like vim.
-bind -T copy-mode-vi 'v' send -X begin-selection
-bind -T copy-mode-vi 'r' send -X rectangle-toggle
-bind -T copy-mode-vi 'y' send -X copy-selection-and-cancel
-bind -T copy-mode-vi 'p' send -X paste-buffer
+bind-key -T copy-mode-vi v send -X begin-selection
+bind-key -T copy-mode-vi r send -X rectangle-toggle
+bind-key -T copy-mode-vi y send -X copy-selection-and-cancel
+bind-key -T copy-mode-vi p send -X paste-buffer
 
 # Prevent the window from jumping to the bottom when leaving copy mode.
 if-shell '[ -n "${TMUX_GTE_2_4}" ]' \
-  'bind-key -T copy-mode-vi MouseDragEnd1Pane send -X copy-selection' \
-  'bind-key -t vi-copy MouseDragEnd1Pane copy-selection -x'
+  "bind-key -T copy-mode-vi MouseDragEnd1Pane send -X copy-selection" \
+  "bind-key -t vi-copy MouseDragEnd1Pane copy-selection -x"
 
 {{ if eq .chezmoi.os "darwin" -}}
 
 # Patch for OS X pbpaste and pbcopy under tmux.
 set-option -g default-command "which reattach-to-user-namespace > /dev/null && reattach-to-user-namespace -l $SHELL || $SHELL"
 
-bind -T copy-mode-vi y send -X copy-pipe-and-cancel 'reattach-to-user-namespace pbcopy'
-bind -T copy-mode-vi Enter send -X copy-pipe-and-cancel 'reattach-to-user-namespace pbcopy'
+bind-key -T copy-mode-vi y send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+bind-key -T copy-mode-vi Enter send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
 
 {{ else if lookPath "xclip" -}}
 
-bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
-bind -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
+bind-key -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "xclip -in -selection clipboard"
+bind-key -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel "xclip -in -selection clipboard"
 
 {{ end -}}
 
-# ==================
-# === Status Bar ===
-# ==================
+# =========================
+# === Window Management ===
+# =========================
 
 # Number windows from 1, and ensure numbering is updated when windows are
 # destroyed.
 set-option -g base-index 1
 set-option -g renumber-windows on
 
+# Number panes from 1
+set-window-option -g pane-base-index 1
+
+# Constrain the size of the window to the size of the smallest client attached
+# to the session.
+set-window-option -g aggressive-resize on
+set-window-option -g window-size smallest
+
 # Highlight window when it has new activity.
 set-window-option -g monitor-activity on
 
-# Left justify statusbar.
-set-option -g status-justify left
-set-option -g status-left-length 40
+# Allow neovim to support autoread events
+set-option -g focus-events on
 
-# Set colours.
-set-window-option -g status-fg white
-set-window-option -g status-bg green
+# Override the new-window shortcut to create a new window in the same directory
+# as the current pane, instead of the default one.
+bind-key c new-window -c "#{pane_current_path}"
 
-if-shell '[ -n "${TMUX_GTE_2_9}" ]' \
-  'set-window-option -g window-status-style fg=white' \
-  'set-window-option -g window-status-fg white'
-if-shell '[ -n "${TMUX_GTE_2_9}" ]' \
-  'set-window-option -g window-status-style bg=green' \
-  'set-window-option -g window-status-bg green'
-if-shell '[ -n "${TMUX_GTE_2_9}" ]' \
-  'set-window-option -g window-status-current-style fg=white' \
-  'set-window-option -g window-status-current-fg white'
-if-shell '[ -n "${TMUX_GTE_2_9}" ]' \
-  'set-window-option -g window-status-current-style bg=blue' \
-  'set-window-option -g window-status-current-bg blue'
+# Think about splits in terms of the orientation of the divider (they do not
+# override the defaults). Each new pane will be created in the same directory
+# as the current pane, instead of the default one.
+bind-key | split-window -h -c "#{pane_current_path}"
+bind-key - split-window -v -c "#{pane_current_path}"
+
+# After splitting the window vertically I almost never want a 50/50 split. This
+# convenience binding will reduce the pane size.
+bind-key _ resize-pane -D 15
+
+# Shift is swallowed by gnome-terminal.
+bind-key -n M-PageDown  select-window -t :+
+bind-key -n M-PageUp    select-window -t :-
+
+# Toggle to the previous active window.
+bind-key ^b last-window
+
+# Reorder windows.
+bind-key j swap-window -t -1\; select-window -t -1
+bind-key k swap-window -t +1\; select-window -t +1
 
 # ===============
 # === Plugins ===
 # ===============
 
 # enable tmux session persistance
-set-option -g @plugin 'tmux-plugins/tpm'
-set-option -g @plugin 'tmux-plugins/tmux-sensible'
-set-option -g @plugin 'tmux-plugins/tmux-resurrect'
-set-option -g @plugin 'tmux-plugins/tmux-continuum'
+set-option -g @plugin "tmux-plugins/tpm"
+set-option -g @plugin "tmux-plugins/tmux-sensible"
+set-option -g @plugin "tmux-plugins/tmux-resurrect"
+set-option -g @plugin "tmux-plugins/tmux-continuum"
 
-set-option -g @continuum-restore 'off' # Explicity off becuase this behaviour is annoying.
-set-option -g @resurrect-strategy-vim 'session'
+set-option -g @continuum-restore "off" # Explicity off becuase this behaviour is annoying.
+set-option -g @resurrect-strategy-vim "session"
+set-option -g @resurrect-strategy-nvim "session"
 
 # enable tmux plugin manager
-run -b '~/.tmux/plugins/tpm/tpm'
+run-shell -b "~/.tmux/plugins/tpm/tpm"
 
-if-shell "[ -f ~/.tmux.conf.after ]" 'source ~/.tmux.conf.after'
+if-shell "[ -f ~/.tmux.conf.after ]" "source ~/.tmux.conf.after"

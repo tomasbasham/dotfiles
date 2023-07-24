@@ -1,0 +1,81 @@
+---
+version: 2
+root-markers:
+- .git/
+lint-debounce: 1s
+tools:
+  markdown-markdownlint-lint: &markdown-markdownlint-lint
+    prefix: markdownlint
+    lint-command: markdownlint --stdin
+    lint-stdin: true
+    lint-formats:
+    - "%f:%l:%c MD%n/%*[^ ] %m"
+    - "%f:%l MD%n/%*[^ ] %m"
+    commands:
+    - title: markdownlint fix
+      command: markdownlint
+      arguments:
+      - --fix
+      - ${INPUT}
+
+  proto-buf-lint: &proto-buf-lint
+    prefix: buf
+    lint-command: buf lint --path
+    root-markers:
+    - buf.yaml
+    - MODULE.bazel
+    - WORKSPACE.bazel
+
+  rst-rstcheck-lint: &rst-rstcheck-lint
+    prefix: rstcheck
+    lint-command: rstcheck --report-level warning -
+    lint-stdin: true
+    lint-formats:
+    - "%f:%l: (%t%*[^/]/%n) %m"
+    root-markers:
+    - requirements.txt
+    - .rstcheck.cfg
+    - setup.cfg
+    - setup.py
+
+  ruby-rubocop-lint: &ruby-rubocop-lint
+    prefix: rubocop
+    lint-command: bundle exec rubocop --format emacs --force-exclusion --stdin ${INPUT}
+    lint-ignore-exit-code: true
+    lint-stdin: true
+    lint-formats:
+    - "%f:%l:%c: %m"
+    root-markers:
+    - Gemfile
+    - Rakefile
+    - .rubocop.yml
+    commands:
+    - title: rubocop fix
+      command: bundle
+      arguments:
+      - exec
+      - rubocop
+      - --auto-correct
+      - ${INPUT}
+
+  yaml-yamllint-lint: &yaml-yamllint-lint
+    lint-command: yamllint -f parsable -
+    lint-stdin: true
+    root-markers:
+    - .yamllint
+
+languages:
+  markdown:
+  - <<: *markdown-markdownlint-lint
+
+  proto:
+  - <<: *proto-buf-lint
+
+  rst:
+  - <<: *rst-rstcheck-lint
+
+  ruby:
+  - <<: *ruby-rubocop-lint
+
+  yaml:
+  - <<: *yaml-yamllint-lint

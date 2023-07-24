@@ -26,8 +26,9 @@ done
 # === Google Cloud SDK ===
 # ========================
 
-if [[ -f "$HOME/.local/google-cloud-sdk/path.bash.inc" ]]; then
-  source "$HOME/.local/google-cloud-sdk/path.bash.inc"
+if [[ -f "$HOME/.local/share/google-cloud-sdk/path.bash.inc" ]]; then
+  source "$HOME/.local/share/google-cloud-sdk/path.bash.inc"
+  source "$HOME/.local/share/google-cloud-sdk/completion.bash.inc"
 fi
 
 # ===============
@@ -40,6 +41,14 @@ export HISTCONTROL=ignoreboth
 
 # Extend the maximum number of commands to remember on the history list to 1000
 export HISTSIZE=1000
+
+# ==============
+# === zoxide ===
+# ==============
+
+if [[ -n "$(command -v zoxide)" ]]; then
+  eval "$(zoxide init bash)"
+fi
 
 # =============
 # === mcfly ===
@@ -103,7 +112,22 @@ fi
 # Only complete directories for 'cd`, http://unix.stackexchange.com/a/186425
 complete -d cd
 
+# ===========
+# === SSH ===
+# ===========
+
 update_auth_sock
+
+# ==============
+# === direnv ===
+# ==============
+
+# For the environment to be configured correctly direnv must be placed last in
+# this file so not to conflict with other environemnt variables.
+
+if [[ -n "$(command -v direnv)" ]]; then
+  eval "$(direnv hook bash)"
+fi
 
 # Load additional configurations.
 if [ -f "${HOME}/.bashrc.after" ]; then
