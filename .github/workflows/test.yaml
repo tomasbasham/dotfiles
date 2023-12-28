@@ -15,7 +15,7 @@ jobs:
         - latest
         - v2.14.0
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: install
       run: sh -c "$(curl -fsLS chezmoi.io/get)" -- -t ${{ matrix.chezmoi }}
     - name: chezmoi init
